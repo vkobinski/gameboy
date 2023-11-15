@@ -94,7 +94,6 @@ impl RegBank {
         let carry = 0 << (pos as u8);
         self.af.reg_part_or(RegPos::LOW, carry)
     }
-
 }
 
 pub struct Cpu {
