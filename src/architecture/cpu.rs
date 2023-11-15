@@ -1,3 +1,8 @@
+pub enum RegPos {
+    HIGH,
+    LOW,
+}
+
 pub struct Register {
     high: u8,
     low: u8,
@@ -8,28 +13,35 @@ impl Register {
         Self { high: 0, low: 0 }
     }
 
-    pub fn high_and(&mut self, val: u8) {
-        self.high &= val;
+    pub fn reg_part_and(&mut self, part: RegPos,val: u8) {
+        match part {
+            RegPos::HIGH => self.high &= val,
+            RegPos::LOW => self.low &= val
+
+        }
     }
 
-    pub fn low_and(&mut self, val: u8) {
-        self.low &= val;
+    pub fn reg_part_or(&mut self, part: RegPos,val: u8) {
+        println!("{}", val);
+        match part {
+            RegPos::HIGH => self.high |= val,
+            RegPos::LOW => self.low |= val
+        }
     }
 
-    pub fn set_high(&mut self, val: u8) {
-        self.high = val;
+    pub fn set_part(&mut self, part: RegPos, val: u8) {
+        match part {
+            RegPos::HIGH => self.high = val,
+            RegPos::LOW => self.low = val
+        }
+
     }
 
-    pub fn set_low(&mut self, val: u8) {
-        self.low = val;
-    }
-
-    pub fn get_high(&self) -> u8 {
-        self.high
-    }
-
-    pub fn get_low(&self) -> u8 {
-        self.low
+    pub fn get_part(&self, part: RegPos) -> u8 {
+        match part {
+            RegPos::HIGH => self.high,
+            RegPos::LOW => self.low
+        }
     }
 
     pub fn get_value(&self) -> u16 {
@@ -39,20 +51,21 @@ impl Register {
     }
 }
 
-enum Flag {
-    ZERO = 7,
-    SUB = 6,
-    HALFCARRY = 5,
+#[derive(Clone)]
+pub enum Flag {
+    ZERO = 1,
+    SUB = 2,
+    HALFCARRY = 3,
     CARRY = 4,
 }
 
-struct RegBank {
-    af: Register,
-    bc: Register,
-    de: Register,
-    hl: Register,
-    sp: Register,
-    pc: Register,
+pub struct RegBank {
+    pub af: Register,
+    pub bc: Register,
+    pub de: Register,
+    pub hl: Register,
+    pub sp: Register,
+    pub pc: Register,
 }
 
 impl RegBank {
@@ -68,13 +81,20 @@ impl RegBank {
     }
 
     pub fn get_flag(&self, pos: Flag) -> u8 {
-        self.af.get_low() & 1 >> pos as u8
+        let res = self.af.get_part(RegPos::LOW) & 1 << (pos.clone() as u8);
+        res >> pos as u8
     }
 
     pub fn set_flag(&mut self, pos: Flag) {
-        let carry = 1 >> pos as u8;
-        self.af.low_and(carry)
+        let carry = 1 << (pos as u8);
+        self.af.reg_part_or(RegPos::LOW, carry)
     }
+
+    pub fn unset_flag(&mut self, pos: Flag) {
+        let carry = 0 << (pos as u8);
+        self.af.reg_part_or(RegPos::LOW, carry)
+    }
+
 }
 
 pub struct Cpu {
