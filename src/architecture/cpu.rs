@@ -119,10 +119,10 @@ impl RegBank {
         self.af.reg_part_and(RegPos::LOW, mask)
     }
 
+    // TODO(#2): The carry check should be before the reg value is changed
     pub fn check_all_sum_flags(&mut self, reg: &Reg8, val: u8) {
         self.check_zero_8(reg);
         self.check_half_carry_8(reg, val);
-        self.check_carry_8(reg, val);
     }
 
     pub fn check_zero_8(&mut self, reg: &Reg8) {
@@ -146,6 +146,7 @@ impl RegBank {
 
         if (sum & 0x100) != 0 {
             self.set_flag(Flag::CARRY);
+            println!("Carry: 1");
         }
     }
 
