@@ -1,10 +1,11 @@
 mod architecture;
 mod tests;
 
-use architecture::cpu::{Cpu, Reg8};
+use architecture::cpu::Reg8;
+use architecture::bus::Bus;
 
 fn main() {
-    let mut cpu = Cpu::new();
-    cpu.bank.set_8_bit_reg(&Reg8::B, 0xFF);
-    cpu.adc_a_r8(Reg8::B);
+    let mut bus = Bus::new();
+    bus.cpu.bank.set_8_bit_reg(&Reg8::B, 0xFF);
+    bus.cpu.adc_a_r8(Reg8::B);
 }

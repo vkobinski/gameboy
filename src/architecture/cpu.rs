@@ -1,6 +1,8 @@
 use core::time;
 use std::{thread, time::Duration};
 
+use super::bus::Bus;
+
 pub enum RegPos {
     HIGH,
     LOW,
