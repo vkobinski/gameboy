@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod mem_tests {
-    use crate::architecture::{cpu::{Flag, Cpu, Reg8, RegPos, Reg16}, mem::Memory};
+    use crate::architecture::{cpu::{Cpu, Reg16}, mem::Memory};
 
     #[test]
     fn write_byte_and_read() {

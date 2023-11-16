@@ -1,7 +1,7 @@
-use core::time;
+
 use std::{thread, time::Duration};
 
-use super::bus::Bus;
+
 
 pub enum RegPos {
     HIGH,
@@ -132,7 +132,7 @@ impl RegBank {
         }
     }
 
-    pub fn check_half_carry_8(&mut self, reg: &Reg8, val: u8) {
+    pub fn check_half_carry_8(&mut self, reg: &Reg8, _val: u8) {
         let res = self.get_8_bit_reg(reg);
 
         if (res & 0x10) != 0 {
