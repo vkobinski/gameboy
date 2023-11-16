@@ -120,9 +120,10 @@ impl RegBank {
     }
 
     // TODO(#2): The carry check should be before the reg value is changed
-    pub fn check_all_sum_flags(&mut self, reg: &Reg8, val: u8) {
+    pub fn check_all_8_sum_flags(&mut self, reg: &Reg8, reg_before: u8, val: u8) {
         self.check_zero_8(reg);
         self.check_half_carry_8(reg, val);
+        self.check_carry_8(reg_before, val);
     }
 
     pub fn check_zero_8(&mut self, reg: &Reg8) {
@@ -136,19 +137,58 @@ impl RegBank {
 
         if (res & 0x10) != 0 {
             self.set_flag(Flag::HALFCARRY);
+            return;
         }
+        self.unset_flag(Flag::HALFCARRY);
     }
 
 
     // TODO(#1): Check if carry checking is correct
-    pub fn check_carry_8(&mut self, reg: &Reg8, val: u8) {
-        let sum = self.get_8_bit_reg(reg) as u16 + val as u16 + self.get_flag(Flag::CARRY) as u16;
+    pub fn check_carry_8(&mut self, reg_before: u8, val: u8) {
+        let sum = reg_before as u16 + val as u16 + self.get_flag(Flag::CARRY) as u16;
 
         if (sum & 0x100) != 0 {
             self.set_flag(Flag::CARRY);
-            println!("Carry: 1");
+            return;
+        }
+        self.unset_flag(Flag::CARRY);
+    }
+
+
+    pub fn check_all_16_sum_flags(&mut self, reg: &Reg16, reg_before: u16, val: u16) {
+        self.check_zero_16(reg);
+        self.check_half_carry_16(reg, val);
+        self.check_carry_16(reg_before, val);
+    }
+
+    pub fn check_zero_16(&mut self, reg: &Reg16) {
+        if self.get_16_bit_reg(reg) == 0 {
+            self.set_flag(Flag::ZERO);
         }
     }
+
+    pub fn check_half_carry_16(&mut self, reg: &Reg16, _val: u16) {
+        let res = self.get_16_bit_reg(reg);
+
+        if (res & 0x1000) != 0 {
+            self.set_flag(Flag::HALFCARRY);
+            return;
+        }
+        self.unset_flag(Flag::HALFCARRY);
+    }
+
+
+    pub fn check_carry_16(&mut self, reg_before: u16, val: u16) {
+        let sum = reg_before as u32 + val as u32 + self.get_flag(Flag::CARRY) as u32;
+
+        if (sum & 0x1000) != 0 {
+            self.set_flag(Flag::CARRY);
+            return;
+        }
+        self.unset_flag(Flag::CARRY);
+    }
+
+
 
     pub fn get_8_bit_reg(&self, reg: &Reg8) -> u8 {
         match reg {
