@@ -1,7 +1,6 @@
-
 use std::{thread, time::Duration};
 
-
+use super::bus::Bus;
 
 pub enum RegPos {
     HIGH,
@@ -192,14 +191,19 @@ impl RegBank {
 
 pub struct Cpu {
     pub bank: RegBank,
+    pub bus: Bus,
     clocks: u64,
 }
 
 impl Cpu {
     pub fn new() -> Self {
+
+        let bus = Bus::new();
+
         Self {
             bank: RegBank::new(),
             clocks: 0,
+            bus,
         }
     }
 
