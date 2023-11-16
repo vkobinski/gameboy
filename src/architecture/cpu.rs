@@ -139,6 +139,8 @@ impl RegBank {
         }
     }
 
+
+    // TODO(#1): Check if carry checking is correct
     pub fn check_carry_8(&mut self, reg: &Reg8, val: u8) {
         let sum = self.get_8_bit_reg(reg) as u16 + val as u16 + self.get_flag(Flag::CARRY) as u16;
 
