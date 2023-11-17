@@ -81,6 +81,7 @@ pub enum Reg16 {
     BC,
     DE,
     HL,
+    SP,
 }
 
 pub struct RegBank {
@@ -124,6 +125,7 @@ impl RegBank {
         self.check_zero_8(reg);
         self.check_half_carry_8(reg, val);
         self.check_carry_8(reg_before, val);
+        self.unset_flag(Flag::SUB);
     }
 
     pub fn check_zero_8(&mut self, reg: &Reg8) {
@@ -159,6 +161,7 @@ impl RegBank {
         self.check_zero_16(reg);
         self.check_half_carry_16(reg, val);
         self.check_carry_16(reg_before, val);
+        self.unset_flag(Flag::SUB);
     }
 
     pub fn check_zero_16(&mut self, reg: &Reg16) {
@@ -220,6 +223,7 @@ impl RegBank {
             Reg16::BC => self.bc.get_value(),
             Reg16::DE => self.de.get_value(),
             Reg16::HL => self.hl.get_value(),
+            Reg16::SP => self.sp.get_value(),
         }
     }
 
@@ -228,7 +232,19 @@ impl RegBank {
             Reg16::BC => self.bc.set_reg(val),
             Reg16::DE => self.de.set_reg(val),
             Reg16::HL => self.hl.set_reg(val),
+            Reg16::SP => self.sp.set_reg(val),
         }
+    }
+
+    pub fn set_flags_and(&mut self, val: u8) {
+        if val == 0 {
+            self.set_flag(Flag::ZERO);
+        }
+
+        self.unset_flag(Flag::SUB);
+        self.set_flag(Flag::HALFCARRY);
+        self.unset_flag(Flag::CARRY);
+
     }
 }
 

@@ -243,4 +243,67 @@ mod ins_tests {
         assert_eq!(cpu.bank.get_16_bit_reg(&Reg16::HL), sum);
         assert_eq!(cpu.bank.get_flag(Flag::CARRY), 0);
     }
+
+    #[test]
+    fn add_hl_sp() {
+       let mut cpu = Cpu::new();
+        cpu.bank.set_16_bit_reg(&Reg16::HL, 0x12);
+        cpu.bank.set_16_bit_reg(&Reg16::SP, 0x24);
+        cpu.add_hl_sp();
+
+        let op1 : u16 = 0x12;
+        let op2 : u16 = 0x24;
+
+        let sum = op1.wrapping_add(op2);
+
+        assert_eq!(cpu.bank.get_16_bit_reg(&Reg16::HL), sum);
+        assert_eq!(cpu.bank.get_flag(Flag::CARRY), 0);
+    }
+
+    #[test]
+    fn add_sp_e8() {
+        let mut cpu = Cpu::new();
+        cpu.bank.set_16_bit_reg(&Reg16::SP, 0x2424);
+        cpu.add_sp_e8(-50);
+
+        assert_eq!(cpu.bank.get_16_bit_reg(&Reg16::SP), 0x23F2);
+    }
+
+    #[test]
+    fn and_a_r8() {
+       let mut cpu = Cpu::new();
+        cpu.bank.set_8_bit_reg(&Reg8::A, 0x12);
+        cpu.bank.set_8_bit_reg(&Reg8::B, 0x24);
+        cpu.and_a_r8(&Reg8::B);
+
+        let op1 : u8 = 0x12;
+        let op2 : u8 = 0x24;
+
+        let sum = op1 & op2;
+
+        assert_eq!(cpu.bank.get_8_bit_reg(&Reg8::A), sum);
+        assert_eq!(cpu.bank.get_flag(Flag::CARRY), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::ZERO), 1);
+        assert_eq!(cpu.bank.get_flag(Flag::SUB), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::HALFCARRY), 1);
+    }
+
+    #[test]
+    fn and_a_r8_with_no_zero_flag() {
+       let mut cpu = Cpu::new();
+        cpu.bank.set_8_bit_reg(&Reg8::A, 0b0010);
+        cpu.bank.set_8_bit_reg(&Reg8::B, 0b0011);
+        cpu.and_a_r8(&Reg8::B);
+
+        let op1 : u8 = 0b0010;
+        let op2 : u8 = 0b0011;
+
+        let sum = op1 & op2;
+
+        assert_eq!(cpu.bank.get_8_bit_reg(&Reg8::A), sum);
+        assert_eq!(cpu.bank.get_flag(Flag::CARRY), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::ZERO), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::SUB), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::HALFCARRY), 1);
+    }
 }
