@@ -1,4 +1,5 @@
 mod architecture;
+mod cartridge;
 mod tests;
 
 use architecture::cpu::{Reg8, Cpu};
