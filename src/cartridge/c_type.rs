@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 
 #[repr(u8)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize, Debug)]
 pub enum CartridgeType {
 
     RomOnly = 0x00,

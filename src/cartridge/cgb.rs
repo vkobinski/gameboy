@@ -1,4 +1,7 @@
+use serde::Deserialize;
+
 #[repr(u8)]
+#[derive(Deserialize, Debug)]
 pub enum CgbFlag {
     // Game supports CGB functions, but works on old gameboys also.
     OldGameboys = 0x80,

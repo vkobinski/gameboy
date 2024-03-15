@@ -3,6 +3,8 @@ mod cartridge;
 mod tests;
 
 use architecture::cpu::{Reg8, Cpu};
+use cartridge::header::Header;
+use serde_bytes::{ByteBuf};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -15,7 +17,7 @@ fn main()  {
 
     let file = File::open("./games/tetris.gb");
 
-    let mut read = match file {
+    let  read = match file {
         Ok(f) => {
             println!("{:?}", f);
             f
@@ -30,17 +32,20 @@ fn main()  {
     let mut buf_reader = BufReader::new(read);
     let readed = buf_reader.read_exact(&mut buffer).expect("Could not read Rom.");
 
-    for byte in &buffer[0x0134..0x0143] {
-        print!("{} ", *byte as char);
+    let header = Header::from_bytes(&buffer).unwrap();
 
-    }
+    for (index, byte) in buffer.into_iter().enumerate() {
 
-    for (i, byte) in buffer.into_iter().enumerate() {
-        print!("{:02x} ", byte);
-        if i % 20 == 0 {
-            println!()
+        print!("{:02x}:{:02x} ",index, byte);
+
+        if index % 10 == 0 {
+            println!();
+
         }
-    }
 
+    }
+    println!();
+
+    println!("{:x}", header.entry_point);
 
 }

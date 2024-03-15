@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq)]
+use serde::Deserialize;
+
+#[derive(Debug, PartialEq, Deserialize)]
 pub struct ByteRomSize {
     pub code: u8,
     pub banks: usize,
