@@ -6,3 +6,4 @@ pub mod region;
 pub mod header;
 pub mod cgb;
 pub mod sgb;
+pub mod rom_size;
