@@ -21,14 +21,13 @@ impl Header {
             return None;
         }
 
-        let mut entry_buf: [u8; 8] = [0; 8];
+        let mut entry_buf: [u8; 2] = [0;2];
+        entry_buf.copy_from_slice(&bytes[0x100..0x102]);
 
-        for (index, byte) in bytes[0x100..0x104].into_iter().enumerate() {
-
-            entry_buf[index] = *byte;
-        }
-
-        let entry_point = usize::from_le_bytes(entry_buf);
+        let entry_point_real_size = u16::from_le_bytes(entry_buf);
+        println!("Entrypoint: {:x}", entry_point_real_size);
+        let entry_point = entry_point_real_size as usize;
+        //let entry_point = usize::from_le_bytes(entry_buf);
 
         let nintendo_logo = bytes[0x104..0x134].try_into().ok()?;
 
@@ -46,7 +45,6 @@ impl Header {
             .try_into()
             .ok()?;
 
-        //let cgb_flag = CgbFlag::try_from(bytes[0x143]).ok()?;
         //let licensee_code = Licensee::try_from(bytes[0x144..0x146].try_into().ok()?).ok()?;
         //let c_type = CartridgeType::try_from(bytes[0x147]).ok()?;
         //let rom_size = ByteRomSize::from_code(bytes[0x148]).ok_or(())?;

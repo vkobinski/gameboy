@@ -36,7 +36,7 @@ fn main()  {
 
     for (index, byte) in buffer.into_iter().enumerate() {
 
-        print!("{:02x}:{:02x} ",index, byte);
+        print!("{index}:{:02x} ", byte);
 
         if index % 10 == 0 {
             println!();
@@ -46,6 +46,6 @@ fn main()  {
     }
     println!();
 
-    println!("{:x}", header.entry_point);
+    println!("{:?}", header);
 
 }
