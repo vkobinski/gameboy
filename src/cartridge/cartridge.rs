@@ -7,7 +7,7 @@ use std::ptr::NonNull;
 
 pub struct Cartridge {
     pub header: Header,
-    pub rom: NonNull<u8>,
+    pub rom: Vec<u8>,
 }
 
 impl Cartridge {
@@ -20,25 +20,11 @@ impl Cartridge {
         let layout = Layout::array::<u8>(rom_size).unwrap();
         let rom: NonNull<u8>;
 
-        let mut buffer: Vec<u8> = vec![0; rom_size];
+        let mut rom: Vec<u8> = vec![0; rom_size];
 
-        reader.read_exact(&mut buffer).unwrap();
+        reader.read_exact(&mut rom).unwrap();
         
         println!("Rom size: {:02x}", rom_size);
-
-        for (index,byte) in buffer.iter().enumerate() {
-            print!("{:02x}:{:02x} ", index, byte);
-
-            if index % 16 == 0 {
-                println!();
-            }
-
-        }
-
-        unsafe {
-            rom = NonNull::new(alloc::alloc(layout)).unwrap();
-            rom.as_ptr().copy_from(buffer.as_ptr(), rom_size);
-        }
 
         Some(
             Self {
