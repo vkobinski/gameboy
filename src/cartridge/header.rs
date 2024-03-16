@@ -14,21 +14,19 @@ pub struct Header {
     pub rom_size: ByteRomSize,
     pub old_licensee: OldLicensee,
     pub region: Region,
-    pub header_checksum: u8,
     pub global_checksum: u16,
 }
 
 impl Header {
 
     pub fn header_checksum_validation(bytes: &[u8], expected: u8) {
-        println!("{:x}", expected);
 
         let start: usize = 0x0134;
 
         let mut checksum: u8 = 0;
 
         for address in range(start, 0x014C + 1) {
-            let check = checksum.wrapping_sub(checksum - bytes[address] - 1);
+            checksum = checksum.wrapping_sub(bytes[address]) - 1;
         }
 
         if checksum != expected {
@@ -88,7 +86,6 @@ impl Header {
             old_licensee,
             region,
             sgb_flag,
-            header_checksum,
             global_checksum
         })
     }

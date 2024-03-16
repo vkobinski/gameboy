@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize, Clone)]
 pub struct ByteRomSize {
     pub code: u8,
     pub banks: usize,
@@ -26,7 +26,7 @@ impl ByteRomSize {
 
 impl ByteRomSize {
 
-    pub fn size_in_bytes(&self) -> usize {
+    pub const fn size_in_bytes(&self) -> usize {
         self.size_kb * 1024
     }
 
