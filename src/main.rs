@@ -17,7 +17,7 @@ fn main()  {
     cpu.bank.set_8_bit_reg(&Reg8::B, 0xFF);
     cpu.adc_a_r8(Reg8::B);
 
-    let file = File::open("./games/mario-land.gb");
+    let file = File::open("./games/megaman.gb");
 
     let  read = match file {
         Ok(f) => f,
@@ -35,6 +35,8 @@ fn main()  {
 
     let header = Header::from_bytes(&buffer).unwrap();
 
-    Cartridge::new(header, &mut buf_reader);
+    let cartridge = Cartridge::new(header, &mut buf_reader);
+
+    println!("{:?}", cartridge.unwrap().header);
 
 }
