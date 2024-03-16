@@ -1,8 +1,11 @@
 use serde::Deserialize;
+use num_derive::FromPrimitive;
 
-#[derive(Deserialize, Debug)]
+
+#[repr(u16)]
+#[derive(Deserialize, Debug, FromPrimitive, Clone)]
 pub enum Licensee {
-    None = 00,
+    UseOldLicensee = 00,
     NintendoRD1 = 01,
     Capcom = 08,
     ElectronicArts = 13 | 69,
@@ -61,3 +64,98 @@ pub enum Licensee {
     PackInSoft = 99,
     Yugioh = 0xA4
 }
+
+impl Into<&str> for Licensee {
+    fn into(self) -> &'static str {
+        match &self {
+            Licensee::UseOldLicensee => "Use old licensee",
+            Licensee::NintendoRD1 => "Nintendo R&D1",
+            Licensee::Capcom => "Capcom",
+            Licensee::ElectronicArts => "Electronic Arts",
+            Licensee::HudsonSoft => "Hudson Soft",
+            Licensee::Bai => "b-ai",
+            Licensee::Kss => "kss",
+            Licensee::Pow => "pow",
+            Licensee::PCM => "PCM Complete",
+            Licensee::Sanx => "san-x",
+            Licensee::Kemco => "Kemco Japan",
+            Licensee::Seta => "seta",
+            Licensee::Viacom => "Viacom",
+            Licensee::Nintendo => "Nintendo",
+            Licensee::Bandai => "Bandai",
+            Licensee::OceanAcclaim => "Ocean/Acclaim",
+            Licensee::Konami => "Konami",
+            Licensee::Hector => "Hector",
+            Licensee::Taito => "Taito",
+            Licensee::Hudson => "Hudson",
+            Licensee::Banpresto => "Banpresto",
+            Licensee::UbiSoft => "Ubi Soft",
+            Licensee::Atlus => "Atlus",
+            Licensee::Malibu => "Malibu",
+            Licensee::Angel => "angel",
+            Licensee::BulletProof => "Bullet-Proof",
+            Licensee::Irem => "irem",
+            Licensee::Absolute => "Absolute",
+            Licensee::Acclaim => "Acclaim",
+            Licensee::Activision => "Activision",
+            Licensee::AmericanSammy => "American sammy",
+            Licensee::HiTechEntertainment => "Hi tech entertainment",
+            Licensee::LJN => "LJN",
+            Licensee::Matchbox => "Matchbox",
+            Licensee::Mattel => "Mattel",
+            Licensee::MiltonBradley => "Milton Bradley",
+            Licensee::Titus => "Titus",
+            Licensee::Virgin => "Virgin",
+            Licensee::LucasArts => "LucasArts",
+            Licensee::Ocean => "Ocean",
+            Licensee::Infogrames => "Infogrames",
+            Licensee::Interplay => "Interplay",
+            Licensee::Broderbund => "Broderbund",
+            Licensee::Sculptured => "sculptured",
+            Licensee::Sci => "sci",
+            Licensee::THQ => "THQ",
+            Licensee::Accolade => "Accolade",
+            Licensee::Misawa => "misawa",
+            Licensee::Lozc => "lozc",
+            Licensee::TokumaShotenI => "tokuma shoten i*",
+            Licensee::TsukudaOri => "tsukuda ori*",
+            Licensee::Chunsoft => "Chunsoft",
+            Licensee::VideoSystem => "Video system",
+            Licensee::Varie => "Varie",
+            Licensee::Yonezawaspal => "Yonezawa/s'pal",
+            Licensee::Kaneko => "Kaneko",
+            Licensee::PackInSoft => "Pack in soft",
+            Licensee::Yugioh => "Konami (Yu-Gi-Oh!)",
+        }
+    }
+}
+
+ impl TryFrom<[u8; 2]> for Licensee {
+
+     type Error = &'static str;
+
+     fn try_from(value: [u8;2]) -> Result<Self, Self::Error> {
+
+        let char_buf: [char; 2] = [value[0] as char, value[1] as char];
+
+        if value[0] == 0 && value[1] == 0 {
+
+            return Ok(Licensee::UseOldLicensee);
+
+        }
+
+        let val_res : [u8; 2] = [char_buf[0] as u8 - b'0', char_buf[1] as u8 - b'0'];
+
+         let val_char = u16::from_be_bytes(val_res);
+
+         let el = num::FromPrimitive::from_u16(val_char);
+
+         match el {
+             Some(val) => Ok(val),
+             None => Err("Could not parse Licensee"),
+
+         }
+
+     }
+
+ }

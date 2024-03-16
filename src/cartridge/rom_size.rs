@@ -23,3 +23,11 @@ impl ByteRomSize {
         }
     }
 }
+
+impl ByteRomSize {
+
+    pub fn size_in_bytes(&self) -> usize {
+        self.size_kb * 1024
+    }
+
+}

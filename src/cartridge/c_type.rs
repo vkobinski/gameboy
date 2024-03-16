@@ -1,7 +1,9 @@
 use serde::Deserialize;
 
+use num_derive::FromPrimitive;
+
 #[repr(u8)]
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, FromPrimitive)]
 pub enum CartridgeType {
 
     RomOnly = 0x00,
@@ -67,6 +69,24 @@ impl Into<&str> for CartridgeType {
             CartridgeType::BandaiTTama5 => "Bandai Tama5",
             CartridgeType::Huc3 => "Huc3",
             CartridgeType::Huc1RamBattery => "HuC1+RAM+BATTERY",
+        }
+
+    }
+
+}
+
+
+impl TryFrom<u8> for CartridgeType {
+
+    type Error = &'static str;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+
+        let el = num::FromPrimitive::from_u8(value);
+
+        match el {
+            Some(val) => Ok(val),
+            None => Err("Could not parse Cartridge Type"),
         }
 
     }
