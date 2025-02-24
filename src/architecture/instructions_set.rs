@@ -4,6 +4,28 @@ use super::{
 };
 
 impl cpu::Cpu {
+    pub fn parse_instruction(&mut self, opcode: u8) {
+
+        let addr = self.current_pc();
+        self.bus.mem.read_byte(addr);
+
+        match opcode {
+            0x00 => self.nop(),
+
+            _ => panic!("Could not parse opcode: {:X}", opcode),
+        }
+    }
+
+    pub fn current_pc(&mut self) -> u16 {
+        let cur = self.bank.pc.get_value();
+        self.bank.pc.set_reg(cur + 0x1);
+        cur
+    }
+
+    pub fn nop(&mut self) {
+        self.tick(1);
+    }
+
     pub fn adc_a_r8(&mut self, reg: Reg8) {
         let a_val = self.bank.get_8_bit_reg(&Reg8::A);
         let r_val = self.bank.get_8_bit_reg(&reg);

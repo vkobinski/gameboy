@@ -1,19 +1,18 @@
-use serde::Deserialize;
 use num_derive::FromPrimitive;
-
+use serde::Deserialize;
 
 #[repr(u16)]
 #[derive(Deserialize, Debug, FromPrimitive, Clone)]
 pub enum Licensee {
-    UseOldLicensee = 00,
-    NintendoRD1 = 01,
-    Capcom = 08,
+    UseOld = 00,
+    NintendoRD1 = 1,
+    Capcom = 8,
     ElectronicArts = 13 | 69,
     HudsonSoft = 18,
     Bai = 19,
     Kss = 20,
     Pow = 22,
-    PCM = 24,
+    Pcm = 24,
     Sanx = 25,
     Kemco = 28,
     Seta = 29,
@@ -37,7 +36,7 @@ pub enum Licensee {
     Activision = 52,
     AmericanSammy = 53,
     HiTechEntertainment = 55,
-    LJN = 56,
+    Ljn = 56,
     Matchbox = 57,
     Mattel = 58,
     MiltonBradley = 59,
@@ -50,7 +49,7 @@ pub enum Licensee {
     Broderbund = 72,
     Sculptured = 73,
     Sci = 75,
-    THQ = 78,
+    Thq = 78,
     Accolade = 79,
     Misawa = 80,
     Lozc = 83,
@@ -62,13 +61,13 @@ pub enum Licensee {
     Yonezawaspal = 96,
     Kaneko = 97,
     PackInSoft = 99,
-    Yugioh = 0xA4
+    Yugioh = 0xA4,
 }
 
-impl Into<&str> for Licensee {
-    fn into(self) -> &'static str {
-        match &self {
-            Licensee::UseOldLicensee => "Use old licensee",
+impl From<Licensee> for &str {
+    fn from(val: Licensee) -> Self {
+        match &val {
+            Licensee::UseOld => "Use old licensee",
             Licensee::NintendoRD1 => "Nintendo R&D1",
             Licensee::Capcom => "Capcom",
             Licensee::ElectronicArts => "Electronic Arts",
@@ -76,7 +75,7 @@ impl Into<&str> for Licensee {
             Licensee::Bai => "b-ai",
             Licensee::Kss => "kss",
             Licensee::Pow => "pow",
-            Licensee::PCM => "PCM Complete",
+            Licensee::Pcm => "PCM Complete",
             Licensee::Sanx => "san-x",
             Licensee::Kemco => "Kemco Japan",
             Licensee::Seta => "seta",
@@ -100,7 +99,7 @@ impl Into<&str> for Licensee {
             Licensee::Activision => "Activision",
             Licensee::AmericanSammy => "American sammy",
             Licensee::HiTechEntertainment => "Hi tech entertainment",
-            Licensee::LJN => "LJN",
+            Licensee::Ljn => "LJN",
             Licensee::Matchbox => "Matchbox",
             Licensee::Mattel => "Mattel",
             Licensee::MiltonBradley => "Milton Bradley",
@@ -113,7 +112,7 @@ impl Into<&str> for Licensee {
             Licensee::Broderbund => "Broderbund",
             Licensee::Sculptured => "sculptured",
             Licensee::Sci => "sci",
-            Licensee::THQ => "THQ",
+            Licensee::Thq => "THQ",
             Licensee::Accolade => "Accolade",
             Licensee::Misawa => "misawa",
             Licensee::Lozc => "lozc",
@@ -130,32 +129,25 @@ impl Into<&str> for Licensee {
     }
 }
 
- impl TryFrom<[u8; 2]> for Licensee {
+impl TryFrom<[u8; 2]> for Licensee {
+    type Error = &'static str;
 
-     type Error = &'static str;
-
-     fn try_from(value: [u8;2]) -> Result<Self, Self::Error> {
-
+    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
         let char_buf: [char; 2] = [value[0] as char, value[1] as char];
 
         if value[0] == 0 && value[1] == 0 {
-
-            return Ok(Licensee::UseOldLicensee);
-
+            return Ok(Licensee::UseOld);
         }
 
-        let val_res : [u8; 2] = [char_buf[0] as u8 - b'0', char_buf[1] as u8 - b'0'];
+        let val_res: [u8; 2] = [char_buf[0] as u8 - b'0', char_buf[1] as u8 - b'0'];
 
-         let val_char = u16::from_be_bytes(val_res);
+        let val_char = u16::from_be_bytes(val_res);
 
-         let el = num::FromPrimitive::from_u16(val_char);
+        let el = num::FromPrimitive::from_u16(val_char);
 
-         match el {
-             Some(val) => Ok(val),
-             None => Err("Could not parse Licensee"),
-
-         }
-
-     }
-
- }
+        match el {
+            Some(val) => Ok(val),
+            None => Err("Could not parse Licensee"),
+        }
+    }
+}

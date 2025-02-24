@@ -14,10 +14,7 @@ use crate::cartridge::cartridge::Cartridge;
 fn main()  {
     let mut cpu = Cpu::new();
 
-    cpu.bank.set_8_bit_reg(&Reg8::B, 0xFF);
-    cpu.adc_a_r8(Reg8::B);
-
-    let file = File::open("./games/megaman.gb");
+    let file = File::open("./games/tetris.gb");
 
     let  read = match file {
         Ok(f) => f,
@@ -29,7 +26,7 @@ fn main()  {
 
     let mut buffer = [0; 0x15F];
     let mut buf_reader = BufReader::new(read);
-    let readed = buf_reader.read_exact(&mut buffer).expect("Could not read Rom.");
+    let _ = buf_reader.read_exact(&mut buffer).expect("Could not read Rom.");
 
     buf_reader.seek(SeekFrom::Start(0)).unwrap();
 
