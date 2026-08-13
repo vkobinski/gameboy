@@ -123,27 +123,47 @@ impl RegBank {
     // TODO(#2): The carry check should be before the reg value is changed
     pub fn check_all_8_sum_flags(&mut self, reg: &Reg8, reg_before: u8, val: u8) {
         self.check_zero_8(reg);
-        self.check_half_carry_8(reg, val);
+        self.check_half_carry_8(reg_before, val);
         self.check_carry_8(reg_before, val);
         self.unset_flag(Flag::SUB);
+    }
+
+    pub fn check_inc_flags_8(&mut self, reg: &Reg8, reg_before: u8) {
+        self.check_zero_8(reg);
+        self.check_half_carry_8(reg_before, 1);
+        self.unset_flag(Flag::SUB);
+    }
+
+    pub fn check_dec_flags_8(&mut self, reg: &Reg8, reg_before: u8) {
+        self.check_zero_8(reg);
+        self.check_half_carry_sub_8(reg_before, 1);
+        self.set_flag(Flag::SUB);
     }
 
     pub fn check_zero_8(&mut self, reg: &Reg8) {
         if self.get_8_bit_reg(reg) == 0 {
             self.set_flag(Flag::ZERO);
-        }
-    }
-
-    pub fn check_half_carry_8(&mut self, reg: &Reg8, _val: u8) {
-        let res = self.get_8_bit_reg(reg);
-
-        if (res & 0x10) != 0 {
-            self.set_flag(Flag::HALFCARRY);
             return;
         }
-        self.unset_flag(Flag::HALFCARRY);
+
+        self.unset_flag(Flag::ZERO);
     }
 
+    pub fn check_half_carry_8(&mut self, reg_before: u8, val: u8) {
+        if (reg_before & 0xF) + (val & 0xF) > 0xF {
+            self.set_flag(Flag::HALFCARRY);
+        } else {
+            self.unset_flag(Flag::HALFCARRY);
+        }
+    }
+
+    pub fn check_half_carry_sub_8(&mut self, reg_before: u8, val: u8) {
+        if (reg_before & 0x0F) == 0x0 {
+            self.set_flag(Flag::HALFCARRY);
+        } else {
+            self.unset_flag(Flag::HALFCARRY);
+        }
+    }
 
     // TODO(#1): Check if carry checking is correct
     pub fn check_carry_8(&mut self, reg_before: u8, val: u8) {
@@ -156,10 +176,9 @@ impl RegBank {
         self.unset_flag(Flag::CARRY);
     }
 
-
     pub fn check_all_16_sum_flags(&mut self, reg: &Reg16, reg_before: u16, val: u16) {
         self.check_zero_16(reg);
-        self.check_half_carry_16(reg, val);
+        self.check_half_carry_16(reg_before, val);
         self.check_carry_16(reg_before, val);
         self.unset_flag(Flag::SUB);
     }
@@ -167,31 +186,29 @@ impl RegBank {
     pub fn check_zero_16(&mut self, reg: &Reg16) {
         if self.get_16_bit_reg(reg) == 0 {
             self.set_flag(Flag::ZERO);
-        }
-    }
-
-    pub fn check_half_carry_16(&mut self, reg: &Reg16, _val: u16) {
-        let res = self.get_16_bit_reg(reg);
-
-        if (res & 0x1000) != 0 {
-            self.set_flag(Flag::HALFCARRY);
             return;
         }
-        self.unset_flag(Flag::HALFCARRY);
+
+        self.unset_flag(Flag::ZERO);
     }
 
+    pub fn check_half_carry_16(&mut self, reg_before: u16, val: u16) {
+        if (reg_before & 0xFFF) + (val & 0xFFF) > 0xFFF {
+            self.set_flag(Flag::HALFCARRY);
+        } else {
+            self.unset_flag(Flag::HALFCARRY);
+        }
+    }
 
     pub fn check_carry_16(&mut self, reg_before: u16, val: u16) {
         let sum = reg_before as u32 + val as u32 + self.get_flag(Flag::CARRY) as u32;
 
-        if (sum & 0x1000) != 0 {
+        if (sum & 0x10000) != 0 {
             self.set_flag(Flag::CARRY);
             return;
         }
         self.unset_flag(Flag::CARRY);
     }
-
-
 
     pub fn get_8_bit_reg(&self, reg: &Reg8) -> u8 {
         match reg {
@@ -216,7 +233,6 @@ impl RegBank {
             Reg8::L => self.hl.set_part(RegPos::LOW, val),
         }
     }
-
 
     pub fn get_16_bit_reg(&self, reg: &Reg16) -> u16 {
         match reg {
@@ -244,7 +260,6 @@ impl RegBank {
         self.unset_flag(Flag::SUB);
         self.set_flag(Flag::HALFCARRY);
         self.unset_flag(Flag::CARRY);
-
     }
 }
 
@@ -256,7 +271,6 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new() -> Self {
-
         let bus = Bus::new();
 
         Self {

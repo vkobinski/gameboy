@@ -1,0 +1,408 @@
+<title>LR35902 Coverage</title>
+<style>
+  :root {
+    --bg: #f5f6ef;
+    --surface: #ffffff;
+    --surface-2: #eceee1;
+    --border: #dbdfcb;
+    --text: #1b2013;
+    --text-muted: #5c6350;
+    --accent: #3f7a72;
+    --accent-contrast: #ffffff;
+    --done: #2f7d3a;
+    --done-bg: #e3f0e0;
+    --todo: #ad6a17;
+    --todo-bg: #f6ead2;
+    --unused: #8b9279;
+    --shadow: rgba(27, 32, 19, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11140d;
+      --surface: #171b12;
+      --surface-2: #1e2317;
+      --border: #2b3120;
+      --text: #e7ebdc;
+      --text-muted: #8b9279;
+      --accent: #6bbdb2;
+      --accent-contrast: #0b1310;
+      --done: #7cc576;
+      --done-bg: #1e3320;
+      --todo: #e0973c;
+      --todo-bg: #3a2c14;
+      --unused: #626b52;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #11140d;
+    --surface: #171b12;
+    --surface-2: #1e2317;
+    --border: #2b3120;
+    --text: #e7ebdc;
+    --text-muted: #8b9279;
+    --accent: #6bbdb2;
+    --accent-contrast: #0b1310;
+    --done: #7cc576;
+    --done-bg: #1e3320;
+    --todo: #e0973c;
+    --todo-bg: #3a2c14;
+    --unused: #626b52;
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono",
+      "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  a { color: var(--accent); }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 0 20px 48px; }
+
+  header.panel {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 10px var(--shadow);
+    padding: 20px 20px 16px;
+    margin: 0 -20px 20px;
+  }
+
+  .title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+
+  .chip-eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: var(--text-muted); }
+
+  .subtitle { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; max-width: 62ch; }
+
+  .progress-block { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+
+  .progress-numbers { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .progress-numbers strong { color: var(--text); }
+
+  .progress-track { height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; display: flex; }
+
+  .progress-fill { height: 100%; background: var(--done); }
+
+  .controls { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  #search {
+    flex: 1 1 220px;
+    min-width: 180px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 3px;
+    font: inherit;
+  }
+
+  #search:focus-visible, .chip:focus-visible, .cb-toggle input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .chip-group { display: flex; gap: 6px; }
+
+  .chip {
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    padding: 7px 12px;
+    border-radius: 3px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+
+  .cb-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; min-width: 720px; }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-2);
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  tbody tr.data-row:hover { background: var(--surface-2); }
+
+  tbody tr.group-row td {
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-op { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-muted); }
+  .col-mnemonic { white-space: nowrap; font-weight: 600; }
+  .col-fn { color: var(--accent); white-space: nowrap; }
+  .col-desc { color: var(--text-muted); min-width: 260px; }
+
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; letter-spacing: 0.03em; white-space: nowrap; }
+  .pill.done { color: var(--done); background: var(--done-bg); }
+  .pill.todo { color: var(--todo); background: var(--todo-bg); }
+  .pill.unused { color: var(--unused); }
+
+  #empty-state { display: none; padding: 24px; text-align: center; color: var(--text-muted); }
+
+  footer { margin-top: 18px; color: var(--text-muted); font-size: 12px; }
+  footer a { color: inherit; text-decoration: underline; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .progress-fill { transition: width 0.4s ease; }
+  }
+</style>
+
+<div class="page">
+  <header class="panel">
+    <div class="title-row">
+      <div>
+        <div class="chip-eyebrow">Sharp LR35902 &middot; unprefixed + CB opcode table</div>
+        <h1>LR35902 Coverage</h1>
+        <p class="subtitle">
+          Every opcode this CPU can decode, whether it's implemented, still a
+          placeholder, or doesn't exist on real hardware. Status below is
+          read straight from the Rust source, not hand-maintained.
+        </p>
+      </div>
+      <div class="progress-block">
+        <div class="progress-numbers">
+          <span><strong id="done-count">0</strong> implemented</span>
+          <span><strong id="todo-count">0</strong> placeholder</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input id="search" type="text" placeholder="Search opcode, mnemonic, function, or description&hellip;" aria-label="Search opcodes" />
+      <div class="chip-group" role="group" aria-label="Filter by status">
+        <button class="chip" data-filter="all" aria-pressed="true">All</button>
+        <button class="chip" data-filter="done" aria-pressed="false">Implemented</button>
+        <button class="chip" data-filter="todo" aria-pressed="false">Placeholder</button>
+        <button class="chip" data-filter="unused" aria-pressed="false">Unused</button>
+      </div>
+      <label class="cb-toggle">
+        <input type="checkbox" id="cb-toggle" />
+        Show CB-prefixed table (256 more, not decoded yet)
+      </label>
+    </div>
+  </header>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Op</th><th>Mnemonic</th><th>Status</th><th>Function</th><th>Description</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty-state">No opcodes match that search.</div>
+  </div>
+
+  <footer>
+    Generated by <code>render_instructions.py</code> from
+    <code>src/architecture/instructions_set.rs</code> and
+    <code>src/architecture/instructions_missing.rs</code> — re-run it after
+    implementing an opcode to refresh this page.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    var table = [{"op":0,"mnemonic":"NOP","fn":"nop","desc":"Does nothing for one cycle.","status":"done"},{"op":1,"mnemonic":"LD BC,d16","fn":"ld_bc_d16","desc":"Load the 16-bit immediate value into BC.","status":"done"},{"op":2,"mnemonic":"LD (BC),A","fn":"ld_bc_a","desc":"Store A into the memory byte addressed by BC.","status":"done"},{"op":3,"mnemonic":"INC BC","fn":"inc_bc","desc":"Increment BC by 1. No flags affected.","status":"done"},{"op":4,"mnemonic":"INC B","fn":"inc_b","desc":"Increment B by 1. Sets Z,H; clears N.","status":"done"},{"op":5,"mnemonic":"DEC B","fn":"dec_b","desc":"Decrement B by 1. Sets Z,H; sets N.","status":"done"},{"op":6,"mnemonic":"LD B,d8","fn":"ld_b_d8","desc":"Load the 8-bit immediate into B.","status":"done"},{"op":7,"mnemonic":"RLCA","fn":"rlca","desc":"Rotate A left circularly; bit 7 moves into Carry and into bit 0.","status":"todo"},{"op":8,"mnemonic":"LD (a16),SP","fn":"ld_a16_sp","desc":"Store SP (2 bytes, little-endian) at the given 16-bit memory address.","status":"todo"},{"op":9,"mnemonic":"ADD HL,BC","fn":"add_hl_r16","desc":"Add BC to HL.","status":"done"},{"op":10,"mnemonic":"LD A,(BC)","fn":"ld_a_bc","desc":"Load A from the memory byte addressed by BC.","status":"todo"},{"op":11,"mnemonic":"DEC BC","fn":"dec_bc","desc":"Decrement BC by 1. No flags affected.","status":"todo"},{"op":12,"mnemonic":"INC C","fn":"inc_c","desc":"Increment C by 1.","status":"todo"},{"op":13,"mnemonic":"DEC C","fn":"dec_c","desc":"Decrement C by 1.","status":"todo"},{"op":14,"mnemonic":"LD C,d8","fn":"ld_c_d8","desc":"Load the 8-bit immediate into C.","status":"todo"},{"op":15,"mnemonic":"RRCA","fn":"rrca","desc":"Rotate A right circularly; bit 0 moves into Carry and into bit 7.","status":"todo"},{"op":16,"mnemonic":"STOP","fn":"stop","desc":"Halt CPU and display until a button is pressed (low-power mode).","status":"todo"},{"op":17,"mnemonic":"LD DE,d16","fn":"ld_de_d16","desc":"Load the 16-bit immediate value into DE.","status":"todo"},{"op":18,"mnemonic":"LD (DE),A","fn":"ld_de_a","desc":"Store A into the memory byte addressed by DE.","status":"todo"},{"op":19,"mnemonic":"INC DE","fn":"inc_de","desc":"Increment DE by 1.","status":"todo"},{"op":20,"mnemonic":"INC D","fn":"inc_d","desc":"Increment D by 1.","status":"todo"},{"op":21,"mnemonic":"DEC D","fn":"dec_d","desc":"Decrement D by 1.","status":"todo"},{"op":22,"mnemonic":"LD D,d8","fn":"ld_d_d8","desc":"Load the 8-bit immediate into D.","status":"todo"},{"op":23,"mnemonic":"RLA","fn":"rla","desc":"Rotate A left through Carry (9-bit rotation using the carry flag).","status":"todo"},{"op":24,"mnemonic":"JR r8","fn":"jr_r8","desc":"Unconditional relative jump by a signed 8-bit offset.","status":"todo"},{"op":25,"mnemonic":"ADD HL,DE","fn":"add_hl_r16","desc":"Add DE to HL.","status":"done"},{"op":26,"mnemonic":"LD A,(DE)","fn":"ld_a_de","desc":"Load A from the memory byte addressed by DE.","status":"todo"},{"op":27,"mnemonic":"DEC DE","fn":"dec_de","desc":"Decrement DE by 1.","status":"todo"},{"op":28,"mnemonic":"INC E","fn":"inc_e","desc":"Increment E by 1.","status":"todo"},{"op":29,"mnemonic":"DEC E","fn":"dec_e","desc":"Decrement E by 1.","status":"todo"},{"op":30,"mnemonic":"LD E,d8","fn":"ld_e_d8","desc":"Load the 8-bit immediate into E.","status":"todo"},{"op":31,"mnemonic":"RRA","fn":"rra","desc":"Rotate A right through Carry.","status":"todo"},{"op":32,"mnemonic":"JR NZ,r8","fn":"jr_nz_r8","desc":"Relative jump by a signed offset if Zero is not set.","status":"todo"},{"op":33,"mnemonic":"LD HL,d16","fn":"ld_hl_d16","desc":"Load the 16-bit immediate value into HL.","status":"todo"},{"op":34,"mnemonic":"LD (HL+),A","fn":"ld_hli_a","desc":"Store A at the address in HL, then increment HL.","status":"todo"},{"op":35,"mnemonic":"INC HL","fn":"inc_hl","desc":"Increment HL by 1.","status":"todo"},{"op":36,"mnemonic":"INC H","fn":"inc_h","desc":"Increment H by 1.","status":"todo"},{"op":37,"mnemonic":"DEC H","fn":"dec_h","desc":"Decrement H by 1.","status":"todo"},{"op":38,"mnemonic":"LD H,d8","fn":"ld_h_d8","desc":"Load the 8-bit immediate into H.","status":"todo"},{"op":39,"mnemonic":"DAA","fn":"daa","desc":"Adjust A to a valid packed-BCD result after an add/subtract.","status":"todo"},{"op":40,"mnemonic":"JR Z,r8","fn":"jr_z_r8","desc":"Relative jump by a signed offset if Zero is set.","status":"todo"},{"op":41,"mnemonic":"ADD HL,HL","fn":"add_hl_r16","desc":"Add HL to itself (double HL).","status":"done"},{"op":42,"mnemonic":"LD A,(HL+)","fn":"ld_a_hli","desc":"Load A from the address in HL, then increment HL.","status":"todo"},{"op":43,"mnemonic":"DEC HL","fn":"dec_hl","desc":"Decrement HL by 1.","status":"todo"},{"op":44,"mnemonic":"INC L","fn":"inc_l","desc":"Increment L by 1.","status":"todo"},{"op":45,"mnemonic":"DEC L","fn":"dec_l","desc":"Decrement L by 1.","status":"todo"},{"op":46,"mnemonic":"LD L,d8","fn":"ld_l_d8","desc":"Load the 8-bit immediate into L.","status":"todo"},{"op":47,"mnemonic":"CPL","fn":"cpl","desc":"Flip every bit of A (one's complement). Sets N,H.","status":"todo"},{"op":48,"mnemonic":"JR NC,r8","fn":"jr_nc_r8","desc":"Relative jump by a signed offset if Carry is not set.","status":"todo"},{"op":49,"mnemonic":"LD SP,d16","fn":"ld_sp_d16","desc":"Load the 16-bit immediate value into SP.","status":"todo"},{"op":50,"mnemonic":"LD (HL-),A","fn":"ld_hld_a","desc":"Store A at the address in HL, then decrement HL.","status":"todo"},{"op":51,"mnemonic":"INC SP","fn":"inc_sp","desc":"Increment SP by 1.","status":"todo"},{"op":52,"mnemonic":"INC (HL)","fn":"inc_hl_ind","desc":"Increment the byte at the memory address in HL.","status":"todo"},{"op":53,"mnemonic":"DEC (HL)","fn":"dec_hl_ind","desc":"Decrement the byte at the memory address in HL.","status":"todo"},{"op":54,"mnemonic":"LD (HL),d8","fn":"ld_hl_ind_d8","desc":"Store the 8-bit immediate at the memory address in HL.","status":"todo"},{"op":55,"mnemonic":"SCF","fn":"scf","desc":"Set the Carry flag. Clears N,H.","status":"todo"},{"op":56,"mnemonic":"JR C,r8","fn":"jr_c_r8","desc":"Relative jump by a signed offset if Carry is set.","status":"todo"},{"op":57,"mnemonic":"ADD HL,SP","fn":"add_hl_sp","desc":"Add SP to HL.","status":"done"},{"op":58,"mnemonic":"LD A,(HL-)","fn":"ld_a_hld","desc":"Load A from the address in HL, then decrement HL.","status":"todo"},{"op":59,"mnemonic":"DEC SP","fn":"dec_sp","desc":"Decrement SP by 1.","status":"todo"},{"op":60,"mnemonic":"INC A","fn":"inc_a","desc":"Increment A by 1.","status":"todo"},{"op":61,"mnemonic":"DEC A","fn":"dec_a","desc":"Decrement A by 1.","status":"todo"},{"op":62,"mnemonic":"LD A,d8","fn":"ld_a_d8","desc":"Load the 8-bit immediate into A.","status":"todo"},{"op":63,"mnemonic":"CCF","fn":"ccf","desc":"Flip the Carry flag. Clears N,H.","status":"todo"},{"op":64,"mnemonic":"LD B,B","fn":"ld_b_b","desc":"Copy B into B.","status":"todo"},{"op":65,"mnemonic":"LD B,C","fn":"ld_b_c","desc":"Copy C into B.","status":"todo"},{"op":66,"mnemonic":"LD B,D","fn":"ld_b_d","desc":"Copy D into B.","status":"todo"},{"op":67,"mnemonic":"LD B,E","fn":"ld_b_e","desc":"Copy E into B.","status":"todo"},{"op":68,"mnemonic":"LD B,H","fn":"ld_b_h","desc":"Copy H into B.","status":"todo"},{"op":69,"mnemonic":"LD B,L","fn":"ld_b_l","desc":"Copy L into B.","status":"todo"},{"op":70,"mnemonic":"LD B,(HL)","fn":"ld_b_hl","desc":"Load B from the byte at the memory address in HL.","status":"todo"},{"op":71,"mnemonic":"LD B,A","fn":"ld_b_a","desc":"Copy A into B.","status":"todo"},{"op":72,"mnemonic":"LD C,B","fn":"ld_c_b","desc":"Copy B into C.","status":"todo"},{"op":73,"mnemonic":"LD C,C","fn":"ld_c_c","desc":"Copy C into C.","status":"todo"},{"op":74,"mnemonic":"LD C,D","fn":"ld_c_d","desc":"Copy D into C.","status":"todo"},{"op":75,"mnemonic":"LD C,E","fn":"ld_c_e","desc":"Copy E into C.","status":"todo"},{"op":76,"mnemonic":"LD C,H","fn":"ld_c_h","desc":"Copy H into C.","status":"todo"},{"op":77,"mnemonic":"LD C,L","fn":"ld_c_l","desc":"Copy L into C.","status":"todo"},{"op":78,"mnemonic":"LD C,(HL)","fn":"ld_c_hl","desc":"Load C from the byte at the memory address in HL.","status":"todo"},{"op":79,"mnemonic":"LD C,A","fn":"ld_c_a","desc":"Copy A into C.","status":"todo"},{"op":80,"mnemonic":"LD D,B","fn":"ld_d_b","desc":"Copy B into D.","status":"todo"},{"op":81,"mnemonic":"LD D,C","fn":"ld_d_c","desc":"Copy C into D.","status":"todo"},{"op":82,"mnemonic":"LD D,D","fn":"ld_d_d","desc":"Copy D into D.","status":"todo"},{"op":83,"mnemonic":"LD D,E","fn":"ld_d_e","desc":"Copy E into D.","status":"todo"},{"op":84,"mnemonic":"LD D,H","fn":"ld_d_h","desc":"Copy H into D.","status":"todo"},{"op":85,"mnemonic":"LD D,L","fn":"ld_d_l","desc":"Copy L into D.","status":"todo"},{"op":86,"mnemonic":"LD D,(HL)","fn":"ld_d_hl","desc":"Load D from the byte at the memory address in HL.","status":"todo"},{"op":87,"mnemonic":"LD D,A","fn":"ld_d_a","desc":"Copy A into D.","status":"todo"},{"op":88,"mnemonic":"LD E,B","fn":"ld_e_b","desc":"Copy B into E.","status":"todo"},{"op":89,"mnemonic":"LD E,C","fn":"ld_e_c","desc":"Copy C into E.","status":"todo"},{"op":90,"mnemonic":"LD E,D","fn":"ld_e_d","desc":"Copy D into E.","status":"todo"},{"op":91,"mnemonic":"LD E,E","fn":"ld_e_e","desc":"Copy E into E.","status":"todo"},{"op":92,"mnemonic":"LD E,H","fn":"ld_e_h","desc":"Copy H into E.","status":"todo"},{"op":93,"mnemonic":"LD E,L","fn":"ld_e_l","desc":"Copy L into E.","status":"todo"},{"op":94,"mnemonic":"LD E,(HL)","fn":"ld_e_hl","desc":"Load E from the byte at the memory address in HL.","status":"todo"},{"op":95,"mnemonic":"LD E,A","fn":"ld_e_a","desc":"Copy A into E.","status":"todo"},{"op":96,"mnemonic":"LD H,B","fn":"ld_h_b","desc":"Copy B into H.","status":"todo"},{"op":97,"mnemonic":"LD H,C","fn":"ld_h_c","desc":"Copy C into H.","status":"todo"},{"op":98,"mnemonic":"LD H,D","fn":"ld_h_d","desc":"Copy D into H.","status":"todo"},{"op":99,"mnemonic":"LD H,E","fn":"ld_h_e","desc":"Copy E into H.","status":"todo"},{"op":100,"mnemonic":"LD H,H","fn":"ld_h_h","desc":"Copy H into H.","status":"todo"},{"op":101,"mnemonic":"LD H,L","fn":"ld_h_l","desc":"Copy L into H.","status":"todo"},{"op":102,"mnemonic":"LD H,(HL)","fn":"ld_h_hl","desc":"Load H from the byte at the memory address in HL.","status":"todo"},{"op":103,"mnemonic":"LD H,A","fn":"ld_h_a","desc":"Copy A into H.","status":"todo"},{"op":104,"mnemonic":"LD L,B","fn":"ld_l_b","desc":"Copy B into L.","status":"todo"},{"op":105,"mnemonic":"LD L,C","fn":"ld_l_c","desc":"Copy C into L.","status":"todo"},{"op":106,"mnemonic":"LD L,D","fn":"ld_l_d","desc":"Copy D into L.","status":"todo"},{"op":107,"mnemonic":"LD L,E","fn":"ld_l_e","desc":"Copy E into L.","status":"todo"},{"op":108,"mnemonic":"LD L,H","fn":"ld_l_h","desc":"Copy H into L.","status":"todo"},{"op":109,"mnemonic":"LD L,L","fn":"ld_l_l","desc":"Copy L into L.","status":"todo"},{"op":110,"mnemonic":"LD L,(HL)","fn":"ld_l_hl","desc":"Load L from the byte at the memory address in HL.","status":"todo"},{"op":111,"mnemonic":"LD L,A","fn":"ld_l_a","desc":"Copy A into L.","status":"todo"},{"op":112,"mnemonic":"LD (HL),B","fn":"ld_hl_ind_b","desc":"Store B into the byte at the memory address in HL.","status":"todo"},{"op":113,"mnemonic":"LD (HL),C","fn":"ld_hl_ind_c","desc":"Store C into the byte at the memory address in HL.","status":"todo"},{"op":114,"mnemonic":"LD (HL),D","fn":"ld_hl_ind_d","desc":"Store D into the byte at the memory address in HL.","status":"todo"},{"op":115,"mnemonic":"LD (HL),E","fn":"ld_hl_ind_e","desc":"Store E into the byte at the memory address in HL.","status":"todo"},{"op":116,"mnemonic":"LD (HL),H","fn":"ld_hl_ind_h","desc":"Store H into the byte at the memory address in HL.","status":"todo"},{"op":117,"mnemonic":"LD (HL),L","fn":"ld_hl_ind_l","desc":"Store L into the byte at the memory address in HL.","status":"todo"},{"op":118,"mnemonic":"HALT","fn":"halt","desc":"Stop executing instructions until an interrupt occurs (low-power wait state).","status":"todo"},{"op":119,"mnemonic":"LD (HL),A","fn":"ld_hl_ind_a","desc":"Store A into the byte at the memory address in HL.","status":"todo"},{"op":120,"mnemonic":"LD A,B","fn":"ld_a_b","desc":"Copy B into A.","status":"todo"},{"op":121,"mnemonic":"LD A,C","fn":"ld_a_c","desc":"Copy C into A.","status":"todo"},{"op":122,"mnemonic":"LD A,D","fn":"ld_a_d","desc":"Copy D into A.","status":"todo"},{"op":123,"mnemonic":"LD A,E","fn":"ld_a_e","desc":"Copy E into A.","status":"todo"},{"op":124,"mnemonic":"LD A,H","fn":"ld_a_h","desc":"Copy H into A.","status":"todo"},{"op":125,"mnemonic":"LD A,L","fn":"ld_a_l","desc":"Copy L into A.","status":"todo"},{"op":126,"mnemonic":"LD A,(HL)","fn":"ld_a_hl_ind","desc":"Load A from the byte at the memory address in HL.","status":"todo"},{"op":127,"mnemonic":"LD A,A","fn":"ld_a_a","desc":"Copy A into A.","status":"todo"},{"op":128,"mnemonic":"ADD A,B","fn":"add_a_r8","desc":"Add B to A.","status":"done"},{"op":129,"mnemonic":"ADD A,C","fn":"add_a_r8","desc":"Add C to A.","status":"done"},{"op":130,"mnemonic":"ADD A,D","fn":"add_a_r8","desc":"Add D to A.","status":"done"},{"op":131,"mnemonic":"ADD A,E","fn":"add_a_r8","desc":"Add E to A.","status":"done"},{"op":132,"mnemonic":"ADD A,H","fn":"add_a_r8","desc":"Add H to A.","status":"done"},{"op":133,"mnemonic":"ADD A,L","fn":"add_a_r8","desc":"Add L to A.","status":"done"},{"op":134,"mnemonic":"ADD A,(HL)","fn":"add_a_hl","desc":"Add the byte at the memory address in HL to A.","status":"done"},{"op":135,"mnemonic":"ADD A,A","fn":"add_a_r8","desc":"Add A to A.","status":"done"},{"op":136,"mnemonic":"ADC A,B","fn":"adc_a_r8","desc":"Add B plus Carry to A.","status":"done"},{"op":137,"mnemonic":"ADC A,C","fn":"adc_a_r8","desc":"Add C plus Carry to A.","status":"done"},{"op":138,"mnemonic":"ADC A,D","fn":"adc_a_r8","desc":"Add D plus Carry to A.","status":"done"},{"op":139,"mnemonic":"ADC A,E","fn":"adc_a_r8","desc":"Add E plus Carry to A.","status":"done"},{"op":140,"mnemonic":"ADC A,H","fn":"adc_a_r8","desc":"Add H plus Carry to A.","status":"done"},{"op":141,"mnemonic":"ADC A,L","fn":"adc_a_r8","desc":"Add L plus Carry to A.","status":"done"},{"op":142,"mnemonic":"ADC A,(HL)","fn":"adc_a_hl","desc":"Add the byte at the memory address in HL plus Carry to A.","status":"done"},{"op":143,"mnemonic":"ADC A,A","fn":"adc_a_r8","desc":"Add A plus Carry to A.","status":"done"},{"op":144,"mnemonic":"SUB A,B","fn":"sub_a_b","desc":"Subtract B from A.","status":"todo"},{"op":145,"mnemonic":"SUB A,C","fn":"sub_a_c","desc":"Subtract C from A.","status":"todo"},{"op":146,"mnemonic":"SUB A,D","fn":"sub_a_d","desc":"Subtract D from A.","status":"todo"},{"op":147,"mnemonic":"SUB A,E","fn":"sub_a_e","desc":"Subtract E from A.","status":"todo"},{"op":148,"mnemonic":"SUB A,H","fn":"sub_a_h","desc":"Subtract H from A.","status":"todo"},{"op":149,"mnemonic":"SUB A,L","fn":"sub_a_l","desc":"Subtract L from A.","status":"todo"},{"op":150,"mnemonic":"SUB A,(HL)","fn":"sub_a_hl","desc":"Subtract the byte at the memory address in HL from A.","status":"todo"},{"op":151,"mnemonic":"SUB A,A","fn":"sub_a_a","desc":"Subtract A from A.","status":"todo"},{"op":152,"mnemonic":"SBC A,B","fn":"sbc_a_b","desc":"Subtract B and Carry from A.","status":"todo"},{"op":153,"mnemonic":"SBC A,C","fn":"sbc_a_c","desc":"Subtract C and Carry from A.","status":"todo"},{"op":154,"mnemonic":"SBC A,D","fn":"sbc_a_d","desc":"Subtract D and Carry from A.","status":"todo"},{"op":155,"mnemonic":"SBC A,E","fn":"sbc_a_e","desc":"Subtract E and Carry from A.","status":"todo"},{"op":156,"mnemonic":"SBC A,H","fn":"sbc_a_h","desc":"Subtract H and Carry from A.","status":"todo"},{"op":157,"mnemonic":"SBC A,L","fn":"sbc_a_l","desc":"Subtract L and Carry from A.","status":"todo"},{"op":158,"mnemonic":"SBC A,(HL)","fn":"sbc_a_hl","desc":"Subtract the byte at the memory address in HL and Carry from A.","status":"todo"},{"op":159,"mnemonic":"SBC A,A","fn":"sbc_a_a","desc":"Subtract A and Carry from A.","status":"todo"},{"op":160,"mnemonic":"AND A,B","fn":"and_a_r8","desc":"Bitwise AND B into A.","status":"done"},{"op":161,"mnemonic":"AND A,C","fn":"and_a_r8","desc":"Bitwise AND C into A.","status":"done"},{"op":162,"mnemonic":"AND A,D","fn":"and_a_r8","desc":"Bitwise AND D into A.","status":"done"},{"op":163,"mnemonic":"AND A,E","fn":"and_a_r8","desc":"Bitwise AND E into A.","status":"done"},{"op":164,"mnemonic":"AND A,H","fn":"and_a_r8","desc":"Bitwise AND H into A.","status":"done"},{"op":165,"mnemonic":"AND A,L","fn":"and_a_r8","desc":"Bitwise AND L into A.","status":"done"},{"op":166,"mnemonic":"AND A,(HL)","fn":"and_a_hl","desc":"Bitwise AND the byte at the memory address in HL into A.","status":"done"},{"op":167,"mnemonic":"AND A,A","fn":"and_a_r8","desc":"Bitwise AND A into A.","status":"done"},{"op":168,"mnemonic":"XOR A,B","fn":"xor_a_b","desc":"Bitwise XOR B into A.","status":"todo"},{"op":169,"mnemonic":"XOR A,C","fn":"xor_a_c","desc":"Bitwise XOR C into A.","status":"todo"},{"op":170,"mnemonic":"XOR A,D","fn":"xor_a_d","desc":"Bitwise XOR D into A.","status":"todo"},{"op":171,"mnemonic":"XOR A,E","fn":"xor_a_e","desc":"Bitwise XOR E into A.","status":"todo"},{"op":172,"mnemonic":"XOR A,H","fn":"xor_a_h","desc":"Bitwise XOR H into A.","status":"todo"},{"op":173,"mnemonic":"XOR A,L","fn":"xor_a_l","desc":"Bitwise XOR L into A.","status":"todo"},{"op":174,"mnemonic":"XOR A,(HL)","fn":"xor_a_hl","desc":"Bitwise XOR the byte at the memory address in HL into A.","status":"todo"},{"op":175,"mnemonic":"XOR A,A","fn":"xor_a_a","desc":"Bitwise XOR A into A.","status":"todo"},{"op":176,"mnemonic":"OR A,B","fn":"or_a_b","desc":"Bitwise OR B into A.","status":"todo"},{"op":177,"mnemonic":"OR A,C","fn":"or_a_c","desc":"Bitwise OR C into A.","status":"todo"},{"op":178,"mnemonic":"OR A,D","fn":"or_a_d","desc":"Bitwise OR D into A.","status":"todo"},{"op":179,"mnemonic":"OR A,E","fn":"or_a_e","desc":"Bitwise OR E into A.","status":"todo"},{"op":180,"mnemonic":"OR A,H","fn":"or_a_h","desc":"Bitwise OR H into A.","status":"todo"},{"op":181,"mnemonic":"OR A,L","fn":"or_a_l","desc":"Bitwise OR L into A.","status":"todo"},{"op":182,"mnemonic":"OR A,(HL)","fn":"or_a_hl","desc":"Bitwise OR the byte at the memory address in HL into A.","status":"todo"},{"op":183,"mnemonic":"OR A,A","fn":"or_a_a","desc":"Bitwise OR A into A.","status":"todo"},{"op":184,"mnemonic":"CP A,B","fn":"cp_a_b","desc":"Compare A with B: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":185,"mnemonic":"CP A,C","fn":"cp_a_c","desc":"Compare A with C: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":186,"mnemonic":"CP A,D","fn":"cp_a_d","desc":"Compare A with D: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":187,"mnemonic":"CP A,E","fn":"cp_a_e","desc":"Compare A with E: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":188,"mnemonic":"CP A,H","fn":"cp_a_h","desc":"Compare A with H: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":189,"mnemonic":"CP A,L","fn":"cp_a_l","desc":"Compare A with L: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":190,"mnemonic":"CP A,(HL)","fn":"cp_a_hl","desc":"Compare A with the byte at the memory address in HL: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":191,"mnemonic":"CP A,A","fn":"cp_a_a","desc":"Compare A with A: subtract without storing the result \u2014 only flags change.","status":"todo"},{"op":192,"mnemonic":"RET NZ","fn":"ret_nz","desc":"Pop the return address and jump to it, if Zero is not set.","status":"todo"},{"op":193,"mnemonic":"POP BC","fn":"pop_bc","desc":"Pop 2 bytes off the stack into BC.","status":"todo"},{"op":194,"mnemonic":"JP NZ,a16","fn":"jp_nz_a16","desc":"Jump to the 16-bit address, if Zero is not set.","status":"todo"},{"op":195,"mnemonic":"JP a16","fn":"jp_a16","desc":"Unconditional absolute jump to the 16-bit address.","status":"todo"},{"op":196,"mnemonic":"CALL NZ,a16","fn":"call_nz_a16","desc":"Push the return address and jump, if Zero is not set.","status":"todo"},{"op":197,"mnemonic":"PUSH BC","fn":"push_bc","desc":"Push BC onto the stack.","status":"todo"},{"op":198,"mnemonic":"ADD A,d8","fn":"add_a_n8","desc":"Add the 8-bit immediate to A.","status":"done"},{"op":199,"mnemonic":"RST 00H","fn":"rst_00","desc":"Push the return address and jump to 0x0000.","status":"todo"},{"op":200,"mnemonic":"RET Z","fn":"ret_z","desc":"Pop the return address and jump to it, if Zero is set.","status":"todo"},{"op":201,"mnemonic":"RET","fn":"ret","desc":"Unconditional return: pop the return address and jump to it.","status":"todo"},{"op":202,"mnemonic":"JP Z,a16","fn":"jp_z_a16","desc":"Jump to the 16-bit address, if Zero is set.","status":"todo"},{"op":203,"mnemonic":"PREFIX CB","fn":"cb_prefixed","desc":"Fetch a second byte and execute it as a CB-table opcode (rotates/shifts/BIT/SET/RES). Whole 256-opcode table collapsed here for now.","status":"todo"},{"op":204,"mnemonic":"CALL Z,a16","fn":"call_z_a16","desc":"Push the return address and jump, if Zero is set.","status":"todo"},{"op":205,"mnemonic":"CALL a16","fn":"call_a16","desc":"Unconditional call: push the return address, jump to the 16-bit address.","status":"todo"},{"op":206,"mnemonic":"ADC A,d8","fn":"adc_a_n8","desc":"Add the 8-bit immediate plus Carry to A.","status":"done"},{"op":207,"mnemonic":"RST 08H","fn":"rst_08","desc":"Push the return address and jump to 0x0008.","status":"todo"},{"op":208,"mnemonic":"RET NC","fn":"ret_nc","desc":"Return, if Carry is not set.","status":"todo"},{"op":209,"mnemonic":"POP DE","fn":"pop_de","desc":"Pop 2 bytes off the stack into DE.","status":"todo"},{"op":210,"mnemonic":"JP NC,a16","fn":"jp_nc_a16","desc":"Jump to the 16-bit address, if Carry is not set.","status":"todo"},{"op":211,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":212,"mnemonic":"CALL NC,a16","fn":"call_nc_a16","desc":"Call, if Carry is not set.","status":"todo"},{"op":213,"mnemonic":"PUSH DE","fn":"push_de","desc":"Push DE onto the stack.","status":"todo"},{"op":214,"mnemonic":"SUB A,d8","fn":"sub_a_d8","desc":"Subtract the 8-bit immediate from A.","status":"todo"},{"op":215,"mnemonic":"RST 10H","fn":"rst_10","desc":"Push the return address and jump to 0x0010.","status":"todo"},{"op":216,"mnemonic":"RET C","fn":"ret_c","desc":"Return, if Carry is set.","status":"todo"},{"op":217,"mnemonic":"RETI","fn":"reti","desc":"Return from subroutine and re-enable interrupts.","status":"todo"},{"op":218,"mnemonic":"JP C,a16","fn":"jp_c_a16","desc":"Jump to the 16-bit address, if Carry is set.","status":"todo"},{"op":219,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":220,"mnemonic":"CALL C,a16","fn":"call_c_a16","desc":"Call, if Carry is set.","status":"todo"},{"op":221,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":222,"mnemonic":"SBC A,d8","fn":"sbc_a_d8","desc":"Subtract the 8-bit immediate and Carry from A.","status":"todo"},{"op":223,"mnemonic":"RST 18H","fn":"rst_18","desc":"Push the return address and jump to 0x0018.","status":"todo"},{"op":224,"mnemonic":"LDH (a8),A","fn":"ldh_a8_a","desc":"Store A into memory address 0xFF00 + a8 (I/O / high RAM).","status":"todo"},{"op":225,"mnemonic":"POP HL","fn":"pop_hl","desc":"Pop 2 bytes off the stack into HL.","status":"todo"},{"op":226,"mnemonic":"LD (C),A","fn":"ld_c_ind_a","desc":"Store A into memory address 0xFF00 + C.","status":"todo"},{"op":227,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":228,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":229,"mnemonic":"PUSH HL","fn":"push_hl","desc":"Push HL onto the stack.","status":"todo"},{"op":230,"mnemonic":"AND A,d8","fn":"and_a_n8","desc":"Bitwise AND the 8-bit immediate into A.","status":"done"},{"op":231,"mnemonic":"RST 20H","fn":"rst_20","desc":"Push the return address and jump to 0x0020.","status":"todo"},{"op":232,"mnemonic":"ADD SP,r8","fn":"add_sp_e8","desc":"Add a signed 8-bit offset to SP.","status":"done"},{"op":233,"mnemonic":"JP HL","fn":"jp_hl","desc":"Jump to the address currently stored in HL.","status":"todo"},{"op":234,"mnemonic":"LD (a16),A","fn":"ld_a16_a","desc":"Store A into the given 16-bit memory address.","status":"todo"},{"op":235,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":236,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":237,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":238,"mnemonic":"XOR A,d8","fn":"xor_a_d8","desc":"Bitwise XOR the 8-bit immediate into A.","status":"todo"},{"op":239,"mnemonic":"RST 28H","fn":"rst_28","desc":"Push the return address and jump to 0x0028.","status":"todo"},{"op":240,"mnemonic":"LDH A,(a8)","fn":"ldh_a_a8","desc":"Load A from memory address 0xFF00 + a8.","status":"todo"},{"op":241,"mnemonic":"POP AF","fn":"pop_af","desc":"Pop 2 bytes off the stack into AF (including flags).","status":"todo"},{"op":242,"mnemonic":"LD A,(C)","fn":"ld_a_c_ind","desc":"Load A from memory address 0xFF00 + C.","status":"todo"},{"op":243,"mnemonic":"DI","fn":"di","desc":"Disable interrupts.","status":"todo"},{"op":244,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":245,"mnemonic":"PUSH AF","fn":"push_af","desc":"Push AF (including flags) onto the stack.","status":"todo"},{"op":246,"mnemonic":"OR A,d8","fn":"or_a_d8","desc":"Bitwise OR the 8-bit immediate into A.","status":"todo"},{"op":247,"mnemonic":"RST 30H","fn":"rst_30","desc":"Push the return address and jump to 0x0030.","status":"todo"},{"op":248,"mnemonic":"LD HL,SP+r8","fn":"ld_hl_sp_r8","desc":"Load HL with SP plus a signed 8-bit offset.","status":"todo"},{"op":249,"mnemonic":"LD SP,HL","fn":"ld_sp_hl","desc":"Load SP with the current value of HL.","status":"todo"},{"op":250,"mnemonic":"LD A,(a16)","fn":"ld_a_a16","desc":"Load A from the given 16-bit memory address.","status":"todo"},{"op":251,"mnemonic":"EI","fn":"ei","desc":"Enable interrupts (takes effect after the next instruction).","status":"todo"},{"op":252,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":253,"mnemonic":"\u2014","fn":null,"desc":"Unused opcode; doesn't exist on real hardware.","status":"unused"},{"op":254,"mnemonic":"CP A,d8","fn":"cp_a_d8","desc":"Compare A with the 8-bit immediate the same way.","status":"todo"},{"op":255,"mnemonic":"RST 38H","fn":"rst_38","desc":"Push the return address and jump to 0x0038.","status":"todo"}];
+
+    function hex(n) { return "0x" + n.toString(16).toUpperCase().padStart(2, "0"); }
+
+    function statusLabel(status) {
+      return status === "done" ? "Implemented" : status === "todo" ? "Placeholder" : "Unused";
+    }
+
+    function buildCbRows() {
+      var rows = [];
+      for (var i = 0; i < 256; i++) {
+        rows.push({
+          op: "CB " + hex(i),
+          mnemonic: "(not decoded)",
+          status: "todo",
+          fn: "cb_prefixed",
+          desc: "Part of the CB-prefixed table (rotates/shifts/BIT/SET/RES); not broken out individually yet."
+        });
+      }
+      return rows;
+    }
+
+    var tbody = document.getElementById("rows");
+    var searchInput = document.getElementById("search");
+    var chips = Array.prototype.slice.call(document.querySelectorAll(".chip"));
+    var cbToggle = document.getElementById("cb-toggle");
+    var emptyState = document.getElementById("empty-state");
+
+    var state = { filter: "all", query: "", showCb: false };
+
+    function rowMatchesQuery(entry, opLabel, q) {
+      if (!q) return true;
+      var haystack = (opLabel + " " + entry.mnemonic + " " + (entry.fn || "") + " " + entry.desc).toLowerCase();
+      return haystack.indexOf(q) !== -1;
+    }
+
+    function appendDataRow(frag, opLabel, entry) {
+      var tr = document.createElement("tr");
+      tr.className = "data-row";
+
+      var tdOp = document.createElement("td");
+      tdOp.className = "col-op";
+      tdOp.textContent = opLabel;
+
+      var tdMnemonic = document.createElement("td");
+      tdMnemonic.className = "col-mnemonic";
+      tdMnemonic.textContent = entry.mnemonic;
+
+      var tdStatus = document.createElement("td");
+      var pill = document.createElement("span");
+      pill.className = "pill " + entry.status;
+      pill.textContent = statusLabel(entry.status);
+      tdStatus.appendChild(pill);
+
+      var tdFn = document.createElement("td");
+      tdFn.className = "col-fn";
+      tdFn.textContent = entry.fn || "—";
+
+      var tdDesc = document.createElement("td");
+      tdDesc.className = "col-desc";
+      tdDesc.textContent = entry.desc;
+
+      tr.appendChild(tdOp);
+      tr.appendChild(tdMnemonic);
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdFn);
+      tr.appendChild(tdDesc);
+      frag.appendChild(tr);
+    }
+
+    function render() {
+      var q = state.query.trim().toLowerCase();
+      var frag = document.createDocumentFragment();
+      var visibleCount = 0;
+
+      for (var i = 0; i < 256; i++) {
+        var entry = table[i];
+        var opLabel = hex(i);
+        var isGroupStart = i % 16 === 0;
+
+        var matchesFilter = state.filter === "all" || entry.status === state.filter;
+        var matchesQuery = rowMatchesQuery(entry, opLabel, q);
+        var visible = matchesFilter && matchesQuery;
+
+        if (isGroupStart) {
+          var groupRow = document.createElement("tr");
+          groupRow.className = "group-row";
+          var groupTd = document.createElement("td");
+          groupTd.colSpan = 5;
+          groupTd.textContent = opLabel.slice(0, 3) + "_";
+          groupRow.appendChild(groupTd);
+          groupRow.style.display = "none";
+          frag.appendChild(groupRow);
+          groupRow._isGroup = true;
+        }
+
+        if (visible) {
+          visibleCount++;
+          appendDataRow(frag, opLabel, entry);
+        }
+      }
+
+      var children = Array.prototype.slice.call(frag.children);
+      for (var g = 0; g < children.length; g++) {
+        if (children[g]._isGroup) {
+          var next = children[g + 1];
+          if (next && !next._isGroup) children[g].style.display = "";
+        }
+      }
+
+      if (state.showCb) {
+        var cbHeader = document.createElement("tr");
+        cbHeader.className = "group-row";
+        var cbTd = document.createElement("td");
+        cbTd.colSpan = 5;
+        cbTd.textContent = "0xCB __  (256 opcodes, not decoded individually)";
+        cbHeader.appendChild(cbTd);
+        frag.appendChild(cbHeader);
+
+        buildCbRows().forEach(function (entry) {
+          if (state.filter !== "all" && state.filter !== "todo") return;
+          if (!rowMatchesQuery(entry, entry.op, q)) return;
+          visibleCount++;
+          appendDataRow(frag, entry.op, entry);
+        });
+      }
+
+      tbody.innerHTML = "";
+      tbody.appendChild(frag);
+      emptyState.style.display = visibleCount === 0 ? "block" : "none";
+    }
+
+    function updateProgress() {
+      var done = 0, todo = 0, total = 0;
+      table.forEach(function (entry) {
+        if (entry.status === "unused") return;
+        total++;
+        if (entry.status === "done") done++;
+        else todo++;
+      });
+      document.getElementById("done-count").textContent = done;
+      document.getElementById("todo-count").textContent = todo;
+      document.getElementById("progress-fill").style.width = (done / total * 100).toFixed(1) + "%";
+    }
+
+    searchInput.addEventListener("input", function (e) { state.query = e.target.value; render(); });
+
+    chips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        chips.forEach(function (c) { c.setAttribute("aria-pressed", "false"); });
+        chip.setAttribute("aria-pressed", "true");
+        state.filter = chip.getAttribute("data-filter");
+        render();
+      });
+    });
+
+    cbToggle.addEventListener("change", function (e) { state.showCb = e.target.checked; render(); });
+
+    updateProgress();
+    render();
+  })();
+</script>
