@@ -1,12 +1,15 @@
 #[cfg(test)]
 mod mem_tests {
-    use crate::architecture::{cpu::{Cpu, Reg16}, mem::Memory};
+    use crate::architecture::{
+        cpu::{Cpu, Reg16},
+        mem::Memory,
+    };
 
     #[test]
     fn write_byte_and_read() {
         let mut mem = Memory::new();
         mem.store_byte(0x02, 128);
-        let val = mem.read_byte(0x02);
+        let val = mem.read_byte_u8(0x02);
 
         assert_eq!(val, 128);
     }
@@ -19,9 +22,8 @@ mod mem_tests {
 
         let mut mem = Memory::new();
         mem.store_byte(cpu.bank.get_16_bit_reg(&Reg16::HL), 128);
-        let val = mem.read_byte(cpu.bank.get_16_bit_reg(&Reg16::HL));
+        let val = mem.read_byte_u8(cpu.bank.get_16_bit_reg(&Reg16::HL));
 
         assert_eq!(val, 128);
     }
-
 }

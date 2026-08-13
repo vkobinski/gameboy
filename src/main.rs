@@ -1,15 +1,10 @@
-mod architecture;
-mod cartridge;
-mod tests;
-
-use architecture::cpu::{Cpu, Reg8};
-use cartridge::header::Header;
+use gameboy::architecture::cpu::{Cpu, Reg8};
+use gameboy::cartridge::cartridge::Cartridge;
+use gameboy::cartridge::header::Header;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::SeekFrom;
-
-use crate::cartridge::cartridge::Cartridge;
 
 fn main() {
     let mut cpu = Cpu::new();
