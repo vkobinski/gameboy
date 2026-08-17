@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
@@ -20,6 +21,15 @@ RUST_SOURCES = [
     REPO_ROOT / "src" / "architecture" / "instructions_set.rs",
     REPO_ROOT / "src" / "architecture" / "instructions_missing.rs",
 ]
+TEST_SOURCES = [
+    REPO_ROOT / "src" / "tests" / "instructions_test.rs",
+    REPO_ROOT / "src" / "tests" / "instructions_test_grids.rs",
+    REPO_ROOT / "src" / "tests" / "instructions_test_other.rs",
+]
+
+TEST_FN_RE = re.compile(r"#\[test\]\s*fn\s+([a-zA-Z0-9_]+)\s*\(\s*\)\s*\{")
+CALL_RE = re.compile(r"cpu\.([a-zA-Z0-9_]+)\(")
+TEST_RESULT_RE = re.compile(r"^test (\S+) \.\.\. (ok|FAILED)$")
 
 FN_RE = re.compile(
     r"pub\s+fn\s+([a-zA-Z0-9_]+)\s*\([^)]*\)(?:\s*->\s*[^\{]+)?\s*\{"
@@ -272,14 +282,133 @@ def build_table() -> None:
         raise RuntimeError(f"opcode table has unfilled slots: {[hex(m) for m in missing]}")
 
 
-def resolve_statuses(implemented: dict[str, bool]) -> None:
+def extract_test_bodies(source: str) -> dict[str, str]:
+    """Returns {test_fn_name: body_text} for every `#[test] fn name() { ... }`."""
+    bodies: dict[str, str] = {}
+    for match in TEST_FN_RE.finditer(source):
+        name = match.group(1)
+        start = match.end()
+        depth = 1
+        i = start
+        while depth > 0 and i < len(source):
+            if source[i] == "{":
+                depth += 1
+            elif source[i] == "}":
+                depth -= 1
+            i += 1
+        bodies[name] = source[start : i - 1]
+    return bodies
+
+
+def run_cargo_tests() -> dict[str, bool]:
+    """Runs `cargo test`, returns {bare_test_fn_name: passed}."""
+    proc = subprocess.run(
+        ["cargo", "test"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    results: dict[str, bool] = {}
+    for line in proc.stdout.splitlines():
+        match = TEST_RESULT_RE.match(line)
+        if not match:
+            continue
+        full_path, outcome = match.groups()
+        bare_name = full_path.rsplit("::", 1)[-1]
+        results[bare_name] = outcome == "ok"
+    return results
+
+
+def load_test_status() -> dict[str, bool]:
+    """Returns {opcode_fn_name: all_referencing_tests_passed}, derived by
+    matching each `#[test]` body's `cpu.<fn>(...)` calls against the actual
+    `cargo test` pass/fail outcome for that test."""
+    test_bodies: dict[str, str] = {}
+    for path in TEST_SOURCES:
+        test_bodies.update(extract_test_bodies(path.read_text()))
+
+    test_outcomes = run_cargo_tests()
+
+    fn_outcomes: dict[str, list[bool]] = {}
+    for test_name, body in test_bodies.items():
+        outcome = test_outcomes.get(test_name)
+        if outcome is None:
+            continue  # test wasn't found in the run (shouldn't normally happen)
+        for fn_name in set(CALL_RE.findall(body)):
+            fn_outcomes.setdefault(fn_name, []).append(outcome)
+
+    return {fn: all(outcomes) for fn, outcomes in fn_outcomes.items()}
+
+
+def resolve_statuses(implemented: dict[str, bool], tests_passed: dict[str, bool]) -> None:
     for entry in TABLE:
         if entry["fn"] is None:
             entry["status"] = "unused"
-        elif implemented.get(entry["fn"]):
-            entry["status"] = "done"
+            entry["tests_passed"] = None
         else:
-            entry["status"] = "todo"
+            entry["status"] = "done" if implemented.get(entry["fn"]) else "todo"
+            entry["tests_passed"] = tests_passed.get(entry["fn"])
+
+
+# ---------------------------------------------------------------------------
+# Flags affected — Z N H C, in that column order. Each slot is one of:
+#   "Z"/"1" = set based on the result / always set
+#   "0"     = always cleared
+#   "-"     = left untouched
+#   "N"/"H"/"C" (in the value position) = restored verbatim, e.g. POP AF
+# This is the LR35902 spec, independent of whether the current Rust body
+# actually does this yet — it's what "Passed Tests?" is checking against.
+# ---------------------------------------------------------------------------
+
+FLAG_OVERRIDES = {
+    "add_hl_r16": "- 0 H C",
+    "add_hl_sp": "- 0 H C",
+    "add_sp_e8": "0 0 H C",
+    "ld_hl_sp_r8": "0 0 H C",
+    "rlca": "0 0 0 C",
+    "rrca": "0 0 0 C",
+    "rla": "0 0 0 C",
+    "rra": "0 0 0 C",
+    "daa": "Z - 0 C",
+    "cpl": "- 1 1 -",
+    "scf": "- 0 0 1",
+    "ccf": "- 0 0 C",
+    "pop_af": "Z N H C",
+}
+
+SIXTEEN_BIT_INC_DEC = {
+    "inc_bc", "dec_bc", "inc_de", "dec_de", "inc_hl", "dec_hl", "inc_sp", "dec_sp",
+}
+
+ADD_ADC_RE = re.compile(r"^(add_a|adc_a)(_|$)")
+SUB_SBC_CP_RE = re.compile(r"^(sub_a|sbc_a|cp_a)(_|$)")
+
+
+def flags_for(fn: str | None) -> str | None:
+    if fn is None or fn == "cb_prefixed":
+        return None  # unused slot, or varies per CB sub-opcode (not broken out)
+    if fn in FLAG_OVERRIDES:
+        return FLAG_OVERRIDES[fn]
+    if fn in SIXTEEN_BIT_INC_DEC:
+        return "- - - -"
+    if fn.startswith("inc_"):
+        return "Z 0 H -"
+    if fn.startswith("dec_"):
+        return "Z 1 H -"
+    if ADD_ADC_RE.match(fn):
+        return "Z 0 H C"
+    if SUB_SBC_CP_RE.match(fn):
+        return "Z 1 H C"
+    if fn.startswith("and_a"):
+        return "Z 0 1 0"
+    if fn.startswith("xor_a") or fn.startswith("or_a"):
+        return "Z 0 0 0"
+    return "- - - -"  # every LD/PUSH/POP(bc,de,hl)/JP/JR/CALL/RET/RST/NOP/HALT/STOP/DI/EI
+
+
+def resolve_flags() -> None:
+    for entry in TABLE:
+        entry["flags"] = flags_for(entry["fn"])
 
 
 HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
@@ -298,6 +427,8 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
     --todo: #ad6a17;
     --todo-bg: #f6ead2;
     --unused: #8b9279;
+    --fail: #b3403a;
+    --fail-bg: #f7dfdb;
     --shadow: rgba(27, 32, 19, 0.08);
   }
 
@@ -316,6 +447,8 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
       --todo: #e0973c;
       --todo-bg: #3a2c14;
       --unused: #626b52;
+      --fail: #e0736c;
+      --fail-bg: #3a1e1c;
       --shadow: rgba(0, 0, 0, 0.4);
     }
   }
@@ -334,6 +467,8 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
     --todo: #e0973c;
     --todo-bg: #3a2c14;
     --unused: #626b52;
+    --fail: #e0736c;
+    --fail-bg: #3a1e1c;
     --shadow: rgba(0, 0, 0, 0.4);
   }
 
@@ -452,11 +587,15 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
   .col-mnemonic { white-space: nowrap; font-weight: 600; }
   .col-fn { color: var(--accent); white-space: nowrap; }
   .col-desc { color: var(--text-muted); min-width: 260px; }
+  .col-flags { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-muted); letter-spacing: 0.08em; }
 
   .pill { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; letter-spacing: 0.03em; white-space: nowrap; }
   .pill.done { color: var(--done); background: var(--done-bg); }
   .pill.todo { color: var(--todo); background: var(--todo-bg); }
   .pill.unused { color: var(--unused); }
+  .pill.tests-yes { color: var(--done); background: var(--done-bg); }
+  .pill.tests-no { color: var(--fail); background: var(--fail-bg); }
+  .col-tests { color: var(--text-muted); }
 
   #empty-state { display: none; padding: 24px; text-align: center; color: var(--text-muted); }
 
@@ -509,7 +648,7 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Op</th><th>Mnemonic</th><th>Status</th><th>Function</th><th>Description</th></tr>
+        <tr><th>Op</th><th>Mnemonic</th><th>Status</th><th>Passed Tests?</th><th>Function</th><th>Flags (Z N H C)</th><th>Description</th></tr>
       </thead>
       <tbody id="rows"></tbody>
     </table>
@@ -543,7 +682,9 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
           op: "CB " + hex(i),
           mnemonic: "(not decoded)",
           status: "todo",
+          tests_passed: null,
           fn: "cb_prefixed",
+          flags: null,
           desc: "Part of the CB-prefixed table (rotates/shifts/BIT/SET/RES); not broken out individually yet."
         });
       }
@@ -560,7 +701,7 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
 
     function rowMatchesQuery(entry, opLabel, q) {
       if (!q) return true;
-      var haystack = (opLabel + " " + entry.mnemonic + " " + (entry.fn || "") + " " + entry.desc).toLowerCase();
+      var haystack = (opLabel + " " + entry.mnemonic + " " + (entry.fn || "") + " " + (entry.flags || "") + " " + entry.desc).toLowerCase();
       return haystack.indexOf(q) !== -1;
     }
 
@@ -582,9 +723,29 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
       pill.textContent = statusLabel(entry.status);
       tdStatus.appendChild(pill);
 
+      var tdTests = document.createElement("td");
+      tdTests.className = "col-tests";
+      if (entry.tests_passed === true) {
+        var testsPill = document.createElement("span");
+        testsPill.className = "pill tests-yes";
+        testsPill.textContent = "Yes";
+        tdTests.appendChild(testsPill);
+      } else if (entry.tests_passed === false) {
+        var testsPillFail = document.createElement("span");
+        testsPillFail.className = "pill tests-no";
+        testsPillFail.textContent = "No";
+        tdTests.appendChild(testsPillFail);
+      } else {
+        tdTests.textContent = "—";
+      }
+
       var tdFn = document.createElement("td");
       tdFn.className = "col-fn";
       tdFn.textContent = entry.fn || "—";
+
+      var tdFlags = document.createElement("td");
+      tdFlags.className = "col-flags";
+      tdFlags.textContent = entry.flags || "—";
 
       var tdDesc = document.createElement("td");
       tdDesc.className = "col-desc";
@@ -593,7 +754,9 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
       tr.appendChild(tdOp);
       tr.appendChild(tdMnemonic);
       tr.appendChild(tdStatus);
+      tr.appendChild(tdTests);
       tr.appendChild(tdFn);
+      tr.appendChild(tdFlags);
       tr.appendChild(tdDesc);
       frag.appendChild(tr);
     }
@@ -616,7 +779,7 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
           var groupRow = document.createElement("tr");
           groupRow.className = "group-row";
           var groupTd = document.createElement("td");
-          groupTd.colSpan = 5;
+          groupTd.colSpan = 7;
           groupTd.textContent = opLabel.slice(0, 3) + "_";
           groupRow.appendChild(groupTd);
           groupRow.style.display = "none";
@@ -642,7 +805,7 @@ HTML_TEMPLATE = r"""<title>LR35902 Coverage</title>
         var cbHeader = document.createElement("tr");
         cbHeader.className = "group-row";
         var cbTd = document.createElement("td");
-        cbTd.colSpan = 5;
+        cbTd.colSpan = 7;
         cbTd.textContent = "0xCB __  (256 opcodes, not decoded individually)";
         cbHeader.appendChild(cbTd);
         frag.appendChild(cbHeader);
@@ -709,17 +872,26 @@ def main() -> None:
 
     build_table()
     implemented = load_function_status()
-    resolve_statuses(implemented)
+    print("running `cargo test`...")
+    tests_passed = load_test_status()
+    resolve_statuses(implemented, tests_passed)
+    resolve_flags()
 
     done = sum(1 for e in TABLE if e["status"] == "done")
     todo = sum(1 for e in TABLE if e["status"] == "todo")
     unused = sum(1 for e in TABLE if e["status"] == "unused")
     total_real = done + todo
 
+    tests_yes = sum(1 for e in TABLE if e["tests_passed"] is True)
+    tests_no = sum(1 for e in TABLE if e["tests_passed"] is False)
+    tests_missing = sum(1 for e in TABLE if e["status"] != "unused" and e["tests_passed"] is None)
+
     args.out.write_text(render_html())
 
     print(f"{done}/{total_real} opcodes implemented ({done / total_real:.1%}); "
           f"{todo} placeholder, {unused} unused.")
+    print(f"{tests_yes} passing tests, {tests_no} failing tests, "
+          f"{tests_missing} with no test coverage.")
     print(f"wrote {args.out.relative_to(REPO_ROOT) if args.out.is_relative_to(REPO_ROOT) else args.out}")
 
 
