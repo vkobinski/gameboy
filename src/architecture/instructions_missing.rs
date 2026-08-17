@@ -55,64 +55,88 @@ impl cpu::Cpu {
     } // 0x08
 
     pub fn ld_a_bc(&mut self) {
-        pass();
-    } // 0x0A  LD A,(BC)
+        let addr = self.bank.get_16_bit_reg(&cpu::Reg16::BC);
+        let val = self.bus.mem.read_byte_u8(addr);
+
+        self.bank.set_8_bit_reg(&cpu::Reg8::A, val);
+    }
 
     pub fn dec_bc(&mut self) {
-        pass();
-    } // 0x0B
+        let old_val = self.bank.get_16_bit_reg(&cpu::Reg16::BC);
+        let val = old_val.wrapping_sub(1);
+        self.bank.set_16_bit_reg(&cpu::Reg16::BC, val);
+    }
 
     pub fn inc_c(&mut self) {
-        pass();
-    } // 0x0C
+        let old_val = self.bank.get_8_bit_reg(&cpu::Reg8::C);
+        let val = old_val.wrapping_add(1);
+        self.bank.set_8_bit_reg(&cpu::Reg8::C, val);
+    }
 
     pub fn dec_c(&mut self) {
-        pass();
-    } // 0x0D
+        let old_val = self.bank.get_8_bit_reg(&cpu::Reg8::C);
+        let val = old_val.wrapping_sub(1);
+        self.bank.set_8_bit_reg(&cpu::Reg8::C, val);
+    }
 
     pub fn ld_c_d8(&mut self) {
-        pass();
-    } // 0x0E
+        let val = self.fetch_argument_u8();
+        self.bank.set_8_bit_reg(&cpu::Reg8::C, val);
+    }
 
     pub fn rrca(&mut self) {
         pass();
-    } // 0x0F
+    }
 
     pub fn stop(&mut self) {
         pass();
-    } // 0x10
+    }
 
     pub fn ld_de_d16(&mut self) {
-        pass();
-    } // 0x11
+        let val = self.fetch_argument_u16();
+        self.bank.set_16_bit_reg(&cpu::Reg16::DE, val);
+    }
 
     pub fn ld_de_a(&mut self) {
-        pass();
-    } // 0x12  LD (DE),A
+        let addr = self.bank.get_16_bit_reg(&cpu::Reg16::DE);
+        let val = self.bus.mem.read_byte_u8(addr);
+
+        self.bank.set_8_bit_reg(&cpu::Reg8::A, val);
+    }
 
     pub fn inc_de(&mut self) {
-        pass();
-    } // 0x13
+        let old_val = self.bank.get_16_bit_reg(&cpu::Reg16::DE);
+        let val = old_val.wrapping_add(1);
+        self.bank.set_16_bit_reg(&cpu::Reg16::DE, val);
+    }
 
     pub fn inc_d(&mut self) {
-        pass();
-    } // 0x14
+        let old_val = self.bank.get_8_bit_reg(&cpu::Reg8::D);
+        let val = old_val.wrapping_add(1);
+        self.bank.set_8_bit_reg(&cpu::Reg8::D, val);
+    }
 
     pub fn dec_d(&mut self) {
-        pass();
-    } // 0x15
+        let old_val = self.bank.get_8_bit_reg(&cpu::Reg8::D);
+        let val = old_val.wrapping_sub(1);
+        self.bank.set_8_bit_reg(&cpu::Reg8::D, val);
+    }
 
     pub fn ld_d_d8(&mut self) {
-        pass();
-    } // 0x16
+        let val = self.fetch_argument_u8();
+        self.bank.set_8_bit_reg(&cpu::Reg8::D, val);
+    }
 
     pub fn rla(&mut self) {
         pass();
     } // 0x17
 
     pub fn jr_r8(&mut self) {
-        pass();
-    } // 0x18
+        let val = self.fetch_argument_i8();
+        let addr = self.bank.pc.get_value();
+
+        self.bank.pc.set_reg(addr.wrapping_add_signed(val as i16));
+    }
 
     pub fn ld_a_de(&mut self) {
         pass();

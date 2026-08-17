@@ -321,6 +321,62 @@ mod ins_tests {
     }
 
     #[test]
+    fn nop() {
+        let mut cpu = Cpu::new();
+        let bc_before = cpu.bank.get_16_bit_reg(&Reg16::BC);
+        let a_before = cpu.bank.get_8_bit_reg(&Reg8::A);
+        let flags_before = cpu.bank.get_flag(Flag::ZERO);
+
+        cpu.nop();
+
+        assert_eq!(cpu.bank.get_16_bit_reg(&Reg16::BC), bc_before);
+        assert_eq!(cpu.bank.get_8_bit_reg(&Reg8::A), a_before);
+        assert_eq!(cpu.bank.get_flag(Flag::ZERO), flags_before);
+    }
+
+    #[test]
+    fn and_a_hl() {
+        let mut cpu = Cpu::new();
+        cpu.bank.set_8_bit_reg(&Reg8::A, 0b1100);
+        cpu.bank.set_16_bit_reg(&Reg16::HL, 0x01AA);
+        cpu.bus.mem.store_byte(0x01AA, 0b1010);
+
+        cpu.and_a_hl();
+
+        assert_eq!(cpu.bank.get_8_bit_reg(&Reg8::A), 0b1000);
+        assert_eq!(cpu.bank.get_flag(Flag::ZERO), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::SUB), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::HALFCARRY), 1);
+        assert_eq!(cpu.bank.get_flag(Flag::CARRY), 0);
+    }
+
+    #[test]
+    fn and_a_n8() {
+        let mut cpu = Cpu::new();
+        cpu.bank.set_8_bit_reg(&Reg8::A, 0b1100);
+        cpu.bus.mem.store_byte(0, 0b1010);
+
+        cpu.and_a_n8();
+
+        assert_eq!(cpu.bank.get_8_bit_reg(&Reg8::A), 0b1000);
+        assert_eq!(cpu.bank.get_flag(Flag::ZERO), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::SUB), 0);
+        assert_eq!(cpu.bank.get_flag(Flag::HALFCARRY), 1);
+        assert_eq!(cpu.bank.get_flag(Flag::CARRY), 0);
+    }
+
+    #[test]
+    fn ld_a_bc() {
+        let mut cpu = Cpu::new();
+        cpu.bank.set_16_bit_reg(&Reg16::BC, 0x1000);
+        cpu.bus.mem.store_byte(0x1000, 0x99);
+
+        cpu.ld_a_bc();
+
+        assert_eq!(cpu.bank.get_8_bit_reg(&Reg8::A), 0x99);
+    }
+
+    #[test]
     fn ld_bc_d16() {
         let mut cpu = Cpu::new();
         cpu.bus.mem.store_byte(0, 0x34);
